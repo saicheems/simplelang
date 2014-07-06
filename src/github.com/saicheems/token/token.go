@@ -2,10 +2,12 @@
 // track identifiers through the compilation stages.
 package token
 
+// Token type; contains all the information necessary to represent lexical
+// elements.
 type Token struct {
-	tag int    // Tag.
-	val int    // Value.
-	ln  int    // Line number.
-	lex string // Lexeme.
-	err string // Error string.
+	Tag int    // Tag.
+	Val int    // Value.
+	Ln  int    // Line number.
+	Lex string // Lexeme.
+	Err string // Error string.
 }
