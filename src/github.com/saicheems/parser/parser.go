@@ -44,10 +44,7 @@ func (p *Parser) parseBlock() (bool, error) {
 }
 
 func (p *Parser) move() error {
-	tok, err := p.lex.Scan()
-	if err != nil {
-		return err
-	}
+	tok := p.lex.Scan()
 	p.look = tok
 	fmt.Println(tok)
 	return nil

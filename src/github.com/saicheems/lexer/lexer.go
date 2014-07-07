@@ -3,15 +3,11 @@ package lexer
 
 import (
 	"bufio"
-	"errors"
 	"os"
 	"strings"
 
 	"github.com/saicheems/token"
 )
-
-// Unexpected character lexing error.
-var UnexpectedChar = errors.New("Unexpected character")
 
 type Lexer struct {
 	rd   *bufio.Reader
@@ -40,37 +36,35 @@ func NewLexerFromString(s string) (*Lexer, *token.SymbolTable) {
 // Scan returns the next valid token from the input stream. If a lexing error
 // occurs, it returns a Token of type Error. If the input stream is completed
 // then an io.EOF error is returned. Otherwise error is nil.
-func (l *Lexer) Scan() (*token.Token, error) {
+func (l *Lexer) Scan() *token.Token {
 	tok := new(token.Token)
 
-	err := l.readCharAndWhitespace()
-	if err != nil {
-		return tok, err
+	if l.readCharAndWhitespace() != nil {
+		return &token.EOF
 	}
-	err = l.scanComments()
-	if err != nil {
-		return tok, err
+	if l.scanComments() != nil {
+		return &token.EOF
 	}
 
 	if l.peek == '+' {
 		tok.Tag = token.TagPlus
-		return tok, nil
+		return tok
 	} else if l.peek == '-' {
 		tok.Tag = token.TagMinus
-		return tok, nil
+		return tok
 	} else if l.peek == '{' {
 		tok.Tag = token.TagLeftCurlyBrace
-		return tok, nil
+		return tok
 	} else if l.peek == '}' {
 		tok.Tag = token.TagRightCurlyBrace
-		return tok, nil
+		return tok
 	}
 
 	if isDigit(l.peek) {
 		v := 0
 		for {
 			v = 10*v + convertCharDigitToInt(l.peek)
-			err = l.readChar()
+			err := l.readChar()
 			if err != nil {
 				break
 			}
@@ -81,9 +75,9 @@ func (l *Lexer) Scan() (*token.Token, error) {
 		}
 		tok.Tag = token.TagInteger
 		tok.Val = v
-		return tok, err
+		return tok
 	}
-	return tok, UnexpectedChar
+	return &token.UnexpectedChar
 }
 
 func (l *Lexer) scanComments() error {
