@@ -2,6 +2,12 @@
 // track identifiers through the compilation stages.
 package token
 
+const (
+	TagPlus    = '+' // Tag for plus symbol
+	TagMinus   = '-'
+	TagInteger = 256
+)
+
 // Token type; contains all the information necessary to represent lexical
 // elements.
 type Token struct {
