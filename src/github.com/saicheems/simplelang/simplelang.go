@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/saicheems/lexer"
+	"github.com/saicheems/parser"
 	"github.com/saicheems/token"
 )
 
@@ -22,5 +23,6 @@ func main() {
 	}
 	s := token.NewSymbolTable()
 	l := lexer.NewLexer(f, s)
-	l.Scan()
+	p := parser.NewParser(l, s)
+	p.Parse()
 }

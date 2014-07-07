@@ -29,12 +29,12 @@ func NewLexer(f *os.File, s *token.SymbolTable) *Lexer {
 }
 
 // Used to create a new lexer for testing.
-func newLexerFromString(s string) *Lexer {
+func NewLexerFromString(s string) (*Lexer, *token.SymbolTable) {
 	l := new(Lexer)
 	l.rd = bufio.NewReader(strings.NewReader(s))
 	l.sym = new(token.SymbolTable)
 	l.loadKeywords()
-	return l
+	return l, l.sym
 }
 
 // Scan returns the next valid token from the input stream. If a lexing error
@@ -57,6 +57,12 @@ func (l *Lexer) Scan() (*token.Token, error) {
 		return tok, nil
 	} else if l.peek == '-' {
 		tok.Tag = token.TagMinus
+		return tok, nil
+	} else if l.peek == '{' {
+		tok.Tag = token.TagLeftCurlyBrace
+		return tok, nil
+	} else if l.peek == '}' {
+		tok.Tag = token.TagRightCurlyBrace
 		return tok, nil
 	}
 

@@ -3,9 +3,11 @@
 package token
 
 const (
-	TagPlus    = '+' // Tag for plus symbol
-	TagMinus   = '-'
-	TagInteger = 256
+	TagPlus            = '+' // Tag for plus symbol
+	TagMinus           = '-'
+	TagLeftCurlyBrace  = '{'
+	TagRightCurlyBrace = '}'
+	TagInteger         = 256
 )
 
 // Token type; contains all the information necessary to represent lexical

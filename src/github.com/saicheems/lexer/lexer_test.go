@@ -40,7 +40,7 @@ var tests = []testPair{
 
 func TestScan(t *testing.T) {
 	for _, pair := range tests {
-		l := newLexerFromString(pair.test)
+		l, _ := NewLexerFromString(pair.test)
 		tok, err := l.Scan()
 
 		if err != pair.err || *tok != pair.expect {
