@@ -22,7 +22,7 @@ func main() {
 		return
 	}
 	s := token.NewSymbolTable()
-	l := lexer.NewLexer(f, s)
-	p := parser.NewParser(l, s)
+	l := lexer.New(f, s)
+	p := parser.New(l, s)
 	p.Parse()
 }

@@ -16,7 +16,7 @@ type Lexer struct {
 	ln   int  // Current line number in input stream.
 }
 
-func NewLexer(f *os.File, s *token.SymbolTable) *Lexer {
+func New(f *os.File, s *token.SymbolTable) *Lexer {
 	l := new(Lexer)
 	l.rd = bufio.NewReader(f)
 	l.sym = s
@@ -25,7 +25,7 @@ func NewLexer(f *os.File, s *token.SymbolTable) *Lexer {
 }
 
 // Used to create a new lexer for testing.
-func NewLexerFromString(s string) (*Lexer, *token.SymbolTable) {
+func NewFromString(s string) (*Lexer, *token.SymbolTable) {
 	l := new(Lexer)
 	l.rd = bufio.NewReader(strings.NewReader(s))
 	l.sym = new(token.SymbolTable)

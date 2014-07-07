@@ -14,7 +14,7 @@ type Parser struct {
 	look *token.Token
 }
 
-func NewParser(l *lexer.Lexer, s *token.SymbolTable) *Parser {
+func New(l *lexer.Lexer, s *token.SymbolTable) *Parser {
 	p := new(Parser)
 	p.lex = l
 	p.top = s

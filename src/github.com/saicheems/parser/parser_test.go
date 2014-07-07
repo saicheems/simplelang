@@ -21,8 +21,8 @@ var tests = []testPair{
 
 func TestScan(t *testing.T) {
 	for _, pair := range tests {
-		l, s := lexer.NewLexerFromString(pair.test)
-		p := NewParser(l, s)
+		l, s := lexer.NewFromString(pair.test)
+		p := New(l, s)
 		pass, err := p.Parse()
 
 		if pass != pair.expect {
