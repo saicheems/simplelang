@@ -21,40 +21,97 @@ func New(l *lexer.Lexer, s *token.SymbolTable) *Parser {
 	return p
 }
 
-func (p *Parser) Parse() (bool, error) {
-	err := p.move()
-	if err != nil {
-		return false, err
+func (p *Parser) Parse() bool {
+	p.move()
+	fmt.Println(p.look)
+	if !p.parseBlock() {
+		return false
 	}
-	return p.parseBlock()
+	if !p.match('.') {
+		return false
+	}
+	return true
 }
 
-func (p *Parser) parseBlock() (bool, error) {
-	// TODO: What about all of these EOF errors?
-	m, err := p.match('{')
-	if !m {
-		return m, fmt.Errorf("Syntax error near line %d.\n", p.look.Ln)
+func (p *Parser) parseBlock() bool {
+	if !p.parseConsts() {
+		return false
 	}
-	// Match statements.
-	m, err = p.match('}')
-	if !m {
-		return m, fmt.Errorf("Syntax error near line %d.\n", p.look.Ln)
+	if !p.parseVars() {
+		return false
 	}
-	return true, err
+	if !p.parseProcedure() {
+		return false
+	}
+	return true
 }
 
-func (p *Parser) move() error {
+func (p *Parser) parseConsts() bool {
+	if p.match(token.TagConst) {
+		if !p.match(token.TagIdentifier) {
+			return false
+		}
+		if !p.match(token.TagEquals) {
+			return false
+		}
+		if !p.match(token.TagInteger) {
+			return false
+		}
+		for {
+			if !p.match(',') {
+				break
+			}
+			if !p.match(token.TagIdentifier) {
+				return false
+			}
+			if !p.match(token.TagEquals) {
+				return false
+			}
+			if !p.match(token.TagInteger) {
+				return false
+			}
+		}
+		if !p.match(token.TagSemicolon) {
+			return false
+		}
+	}
+	return true
+}
+
+func (p *Parser) parseVars() bool {
+	if p.match(token.TagVar) {
+		if !p.match(token.TagIdentifier) {
+			return false
+		}
+		for {
+			if !p.match(',') {
+				break
+			}
+			if !p.match(token.TagIdentifier) {
+				return false
+			}
+		}
+		if !p.match(';') {
+			return false
+		}
+	}
+	return true
+}
+
+func (p *Parser) parseProcedure() bool {
+	// TODO: Implement.
+	return true
+}
+
+func (p *Parser) move() {
 	tok := p.lex.Scan()
 	p.look = tok
-	fmt.Println(tok)
-	return nil
 }
 
-func (p *Parser) match(t int) (bool, error) {
+func (p *Parser) match(t int) bool {
 	if p.look.Tag == t {
-		err := p.move()
-		return true, err
-	} else {
-		return false, nil
+		p.move()
+		return true
 	}
+	return false
 }

@@ -86,7 +86,8 @@ var singleTokenTests = []singleTokenTestPair{
 var multiTokenTests = []multiTokenTestPair{
 	{"+-", []token.Token{token.Token{Tag: token.TagPlus}, token.Token{Tag: token.TagMinus}, token.EOF}},
 	{"BEGIN\n" +
-		"END.", []token.Token{token.Token{Tag: token.TagBegin}, token.Token{Tag: token.TagEnd}, token.Token{Tag: token.TagPeriod}, token.EOF}},
+		"END.", []token.Token{token.Token{Tag: token.TagBegin}, token.Token{Tag: token.TagEnd},
+		token.Token{Tag: token.TagPeriod}, token.EOF}},
 	{"BEGIN\n" +
 		"CONST\n" +
 		"\tm = 7;\n" +
@@ -106,6 +107,9 @@ var multiTokenTests = []multiTokenTestPair{
 		token.Token{Tag: token.TagIdentifier, Lex: "x"}, token.Token{Tag: token.TagSemicolon},
 		token.Token{Tag: token.TagEnd}, token.Token{Tag: token.TagSemicolon},
 		token.Token{Tag: token.TagEnd}, token.Token{Tag: token.TagPeriod}, token.EOF}},
+	{"CONST a = 3;.", []token.Token{token.Token{Tag: token.TagConst}, token.Token{Tag: token.TagIdentifier, Lex: "a"},
+		token.Token{Tag: token.TagEquals}, token.Token{Tag: token.TagInteger, Val: 3}, token.Token{Tag: token.TagSemicolon},
+		token.Token{Tag: token.TagPeriod}, token.EOF}},
 }
 
 func TestScan(t *testing.T) {

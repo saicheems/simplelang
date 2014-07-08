@@ -12,24 +12,25 @@ type testPair struct {
 }
 
 var tests = []testPair{
-	{"", false},
-	{"{}", true},
-	{"{\n\n", false},
-	{"{\n\n}", true},
-	{"{\n\n} ", true},
+	{".", true},
+	{"CONST a = 3;.", true},
+	{"CONST a = 3, b = 4;.", true},
+	{"CONSt a = 3;.", false},
+	{"VAR a;.", true},
+	{"CONST a = 3; VAR b, c, d;.", true},
 }
 
 func TestScan(t *testing.T) {
 	for _, pair := range tests {
 		l, s := lexer.NewFromString(pair.test)
 		p := New(l, s)
-		pass, err := p.Parse()
+		pass := p.Parse()
 
 		if pass != pair.expect {
 			t.Error(
-				"For", pair.test,
-				"expected", pair.expect,
-				"got", pass, err,
+				"\nFor\n------\n"+pair.test,
+				"\n------\nExpected\n------\n", pair.expect,
+				"\n------\nGot\n------\n", pass,
 			)
 		}
 	}
