@@ -3,6 +3,7 @@ package lexer
 
 import (
 	"bufio"
+	"bytes"
 	"os"
 	"strings"
 
@@ -28,7 +29,7 @@ func New(f *os.File, s *token.SymbolTable) *Lexer {
 func NewFromString(s string) (*Lexer, *token.SymbolTable) {
 	l := new(Lexer)
 	l.rd = bufio.NewReader(strings.NewReader(s))
-	l.sym = new(token.SymbolTable)
+	l.sym = token.NewSymbolTable()
 	l.loadKeywords()
 	return l, l.sym
 }
@@ -46,7 +47,56 @@ func (l *Lexer) Scan() *token.Token {
 		return &token.EOF
 	}
 
-	if l.peek == '+' {
+	if l.peek == '.' {
+		tok.Tag = token.TagPeriod
+		return tok
+	} else if l.peek == ',' {
+		tok.Tag = token.TagComma
+		return tok
+	} else if l.peek == ';' {
+		tok.Tag = token.TagSemicolon
+		return tok
+	} else if l.peek == '=' {
+		tok.Tag = token.TagEquals
+		return tok
+	} else if l.peek == '#' {
+		tok.Tag = token.TagNotEquals
+		return tok
+	} else if l.peek == '<' {
+		tok.Tag = token.TagLessThan
+		// We won't do anything about an error here.
+		m, _ := l.readCharAndMatch('=')
+		if m {
+			tok.Tag = token.TagLessThanEqualTo
+			return tok
+		} else {
+			l.unreadChar()
+		}
+		return tok
+	} else if l.peek == '>' {
+		tok.Tag = token.TagGreaterThan
+		// We won't do anything about an error here.
+		m, _ := l.readCharAndMatch('=')
+		if m {
+			tok.Tag = token.TagGreaterThanEqualTo
+			return tok
+		} else {
+			l.unreadChar()
+		}
+		return tok
+	} else if l.peek == '*' {
+		tok.Tag = token.TagTimes
+		return tok
+	} else if l.peek == '/' {
+		tok.Tag = token.TagDivide
+		return tok
+	} else if l.peek == '?' {
+		tok.Tag = token.TagQuestion
+		return tok
+	} else if l.peek == '!' {
+		tok.Tag = token.TagExclamation
+		return tok
+	} else if l.peek == '+' {
 		tok.Tag = token.TagPlus
 		return tok
 	} else if l.peek == '-' {
@@ -58,8 +108,41 @@ func (l *Lexer) Scan() *token.Token {
 	} else if l.peek == '}' {
 		tok.Tag = token.TagRightCurlyBrace
 		return tok
+	} else if l.peek == '(' {
+		tok.Tag = token.TagLeftParen
+		return tok
+	} else if l.peek == ')' {
+		tok.Tag = token.TagRightParen
+		return tok
+	} else if l.peek == ':' {
+		// We won't do anything about an error here.
+		m, _ := l.readCharAndMatch('=')
+		if m {
+			tok.Tag = token.TagAssignment
+			return tok
+		} else {
+			l.unreadChar()
+		}
 	}
-
+	if isAlpha(l.peek) {
+		var strBuf bytes.Buffer
+		for {
+			strBuf.WriteByte(l.peek)
+			err := l.readChar()
+			if err != nil {
+				break
+			}
+			if !(isAlpha(l.peek) || isDigit(l.peek)) {
+				l.unreadChar()
+				break
+			}
+		}
+		tok.Lex = strBuf.String()
+		// Current tag of the lexeme in the symbol table.
+		tok.Tag = token.TagIdentifier
+		tok.Tag = l.sym.Put(tok.Tag, tok.Lex)
+		return tok
+	}
 	if isDigit(l.peek) {
 		v := 0
 		for {
@@ -84,7 +167,8 @@ func (l *Lexer) scanComments() error {
 	if l.peek == '/' {
 		match, err := l.readCharAndMatch('*')
 		if err != nil {
-			return err
+			// We'll return nil in this case so we can pick up the divide token...
+			return nil
 		}
 		if match {
 			for {
@@ -138,7 +222,17 @@ func (l *Lexer) scanComments() error {
 
 // Loads reserved keywords into the symbol table. Should be called on init.
 func (l *Lexer) loadKeywords() {
-
+	l.sym.Put(token.TagConst, "CONST")
+	l.sym.Put(token.TagVar, "VAR")
+	l.sym.Put(token.TagProcedure, "PROCEDURE")
+	l.sym.Put(token.TagCall, "CALL")
+	l.sym.Put(token.TagBegin, "BEGIN")
+	l.sym.Put(token.TagEnd, "END")
+	l.sym.Put(token.TagIf, "IF")
+	l.sym.Put(token.TagThen, "THEN")
+	l.sym.Put(token.TagWhile, "WHILE")
+	l.sym.Put(token.TagDo, "DO")
+	l.sym.Put(token.TagOdd, "ODD")
 }
 
 func (l *Lexer) readChar() error {
@@ -190,6 +284,10 @@ func (l *Lexer) readCharAndMatch(c byte) (bool, error) {
 func (l *Lexer) unreadChar() error {
 	// Error should never be encountered.
 	return l.rd.UnreadByte()
+}
+
+func isAlpha(c byte) bool {
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
 }
 
 func isDigit(c byte) bool {

@@ -8,11 +8,39 @@ import (
 )
 
 const (
-	TagPlus            = '+' // Tag for plus symbol
-	TagMinus           = '-'
-	TagLeftCurlyBrace  = '{'
-	TagRightCurlyBrace = '}'
-	TagInteger         = 256
+	TagPeriod             = '.'
+	TagComma              = ','
+	TagSemicolon          = ';'
+	TagEquals             = '='
+	TagNotEquals          = '#'
+	TagLessThan           = '<'
+	TagGreaterThan        = '>'
+	TagTimes              = '*'
+	TagDivide             = '/'
+	TagQuestion           = '?'
+	TagExclamation        = '!'
+	TagPlus               = '+'
+	TagMinus              = '-'
+	TagLeftCurlyBrace     = '{'
+	TagRightCurlyBrace    = '}'
+	TagLeftParen          = '('
+	TagRightParen         = ')'
+	TagInteger            = 256
+	TagConst              = 257
+	TagVar                = 258
+	TagIdentifier         = 259
+	TagProcedure          = 260
+	TagAssignment         = 261
+	TagCall               = 262
+	TagBegin              = 263
+	TagEnd                = 264
+	TagIf                 = 265
+	TagThen               = 266
+	TagWhile              = 267
+	TagDo                 = 268
+	TagOdd                = 269
+	TagLessThanEqualTo    = 270
+	TagGreaterThanEqualTo = 271
 )
 
 var EOF = Token{Err: io.EOF}
