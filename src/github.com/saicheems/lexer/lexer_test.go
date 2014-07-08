@@ -1,17 +1,23 @@
 package lexer
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/saicheems/token"
 )
 
-type testPair struct {
+type singleTokenTestPair struct {
 	test   string
 	expect token.Token
 }
 
-var tests = []testPair{
+type multiTokenTestPair struct {
+	test   string
+	expect []token.Token
+}
+
+var singleTokenTests = []singleTokenTestPair{
 	{"", token.EOF},
 	{" ", token.EOF},
 	{"\t", token.EOF},
@@ -66,19 +72,25 @@ var tests = []testPair{
 	{"Ident", token.Token{Tag: token.TagIdentifier, Lex: "Ident"}},
 	{"Ident0123", token.Token{Tag: token.TagIdentifier, Lex: "Ident0123"}},
 	{"0Ident0123", token.Token{Tag: token.TagInteger}},
-	{"PROCEDURE", token.Token{Tag: token.TagProcedure, Lex: "PROCEDURE"}},
-	{"CALL", token.Token{Tag: token.TagCall, Lex: "CALL"}},
-	{"BEGIN", token.Token{Tag: token.TagBegin, Lex: "BEGIN"}},
-	{"END", token.Token{Tag: token.TagEnd, Lex: "END"}},
-	{"IF", token.Token{Tag: token.TagIf, Lex: "IF"}},
-	{"THEN", token.Token{Tag: token.TagThen, Lex: "THEN"}},
-	{"WHILE", token.Token{Tag: token.TagWhile, Lex: "WHILE"}},
-	{"DO", token.Token{Tag: token.TagDo, Lex: "DO"}},
-	{"ODD", token.Token{Tag: token.TagOdd, Lex: "ODD"}},
+	{"PROCEDURE", token.Token{Tag: token.TagProcedure}},
+	{"CALL", token.Token{Tag: token.TagCall}},
+	{"BEGIN", token.Token{Tag: token.TagBegin}},
+	{"END", token.Token{Tag: token.TagEnd}},
+	{"IF", token.Token{Tag: token.TagIf}},
+	{"THEN", token.Token{Tag: token.TagThen}},
+	{"WHILE", token.Token{Tag: token.TagWhile}},
+	{"DO", token.Token{Tag: token.TagDo}},
+	{"ODD", token.Token{Tag: token.TagOdd}},
+}
+
+var multiTokenTests = []multiTokenTestPair{
+	{"+-", []token.Token{token.Token{Tag: token.TagPlus}, token.Token{Tag: token.TagMinus}, token.EOF}},
+	{"BEGIN\n" +
+		"END.", []token.Token{token.Token{Tag: token.TagBegin}, token.Token{Tag: token.TagEnd}, token.Token{Tag: token.TagPeriod}, token.EOF}},
 }
 
 func TestScan(t *testing.T) {
-	for _, pair := range tests {
+	for _, pair := range singleTokenTests {
 		l, _ := NewFromString(pair.test)
 		tok := l.Scan()
 
@@ -87,6 +99,24 @@ func TestScan(t *testing.T) {
 				"For", pair.test,
 				"expected", pair.expect,
 				"got", tok,
+			)
+		}
+	}
+	for _, pair := range multiTokenTests {
+		l, _ := NewFromString(pair.test)
+		out := []token.Token{}
+		for {
+			tok := l.Scan()
+			out = append(out, *tok)
+			if tok == &token.EOF {
+				break
+			}
+		}
+		if !reflect.DeepEqual(out, pair.expect) {
+			t.Error(
+				"For", pair.test,
+				"expected", pair.expect,
+				"got", out,
 			)
 		}
 	}

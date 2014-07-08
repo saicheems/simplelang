@@ -137,10 +137,13 @@ func (l *Lexer) Scan() *token.Token {
 				break
 			}
 		}
-		tok.Lex = strBuf.String()
-		// Current tag of the lexeme in the symbol table.
+		lexeme := strBuf.String()
 		tok.Tag = token.TagIdentifier
-		tok.Tag = l.sym.Put(tok.Tag, tok.Lex)
+		tok.Tag = l.sym.Put(tok.Tag, lexeme)
+		// We won't set the lexeme of the token if it's a keyword.
+		if tok.Tag == token.TagIdentifier {
+			tok.Lex = lexeme
+		}
 		return tok
 	}
 	if isDigit(l.peek) {
