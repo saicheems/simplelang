@@ -187,25 +187,12 @@ func (p *Parser) parseCondition() bool {
 			// Expected condition.
 			return false
 		}
-		if !p.parseComparisonOp() {
+		if !(p.match(token.TagEquals) || p.match(token.TagNotEquals) ||
+			p.match(token.TagLessThan) || p.match(token.TagLessThanEqualTo) ||
+			p.match(token.TagGreaterThan) || p.match(token.TagGreaterThanEqualTo)) {
 			return false
 		}
 		if !p.parseExpression() {
-			return false
-		}
-	}
-	return true
-}
-
-func (p *Parser) parseComparisonOp() bool {
-	if p.match(token.TagEquals) {
-	} else if p.match(token.TagNotEquals) {
-	} else if p.match(token.TagLessThan) {
-	} else if p.match(token.TagLessThanEqualTo) {
-	} else if p.match(token.TagGreaterThan) {
-	} else {
-		if !p.match(token.TagGreaterThanEqualTo) {
-			// Expected comparison operator.
 			return false
 		}
 	}
