@@ -12,12 +12,39 @@ type testPair struct {
 }
 
 var tests = []testPair{
-	{".", true},
-	{"CONST a = 3;.", true},
-	{"CONST a = 3, b = 4;.", true},
-	{"CONSt a = 3;.", false},
-	{"VAR a;.", true},
-	{"CONST a = 3; VAR b, c, d;.", true},
+	{"BEGIN x := 3; END.", true},
+	{"BEGIN END.", false},
+	{"VAR x, y;.", false},
+	{"VAR x, squ; BEGIN x := 3; END.", true},
+	{"VAR x, squ; PROCEDURE square; BEGIN x := 3; END; BEGIN x := 3; END.", true},
+	{"VAR x, squ; PROCEDURE square; BEGIN x := -3+8; END; BEGIN x := 3; END.", true},
+	{"VAR x, squ;\n" +
+		"PROCEDURE square;\n" +
+		"BEGIN\n" +
+		"squ:= x * x;\n" +
+		"END;\n" +
+		"BEGIN\n" +
+		"x := 1;\n" +
+		"WHILE x <= 10 DO\n" +
+		"\tBEGIN\n" +
+		"\tCALL square;\n" +
+		"\tx := x + 1;\n" +
+		"\tEND;\n" +
+		"END.\n", true},
+	{"CONST m = 3, n = 6;\n" +
+		"VAR x, squ;\n" +
+		"PROCEDURE square;\n" +
+		"BEGIN\n" +
+		"squ:= x * x;\n" +
+		"END;\n" +
+		"BEGIN\n" +
+		"x := 1;\n" +
+		"WHILE x <= 10 DO\n" +
+		"\tBEGIN\n" +
+		"\tCALL square;\n" +
+		"\tx := x + 1;\n" +
+		"\tEND;\n" +
+		"END.\n", true},
 }
 
 func TestScan(t *testing.T) {
