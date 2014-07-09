@@ -86,8 +86,8 @@ var singleTokenTests = []singleTokenTestPair{
 var multiTokenTests = []multiTokenTestPair{
 	{"+-", []token.Token{token.Token{Tag: token.TagPlus}, token.Token{Tag: token.TagMinus}, token.EOF}},
 	{"BEGIN\n" +
-		"END.", []token.Token{token.Token{Tag: token.TagBegin}, token.Token{Tag: token.TagEnd},
-		token.Token{Tag: token.TagPeriod}, token.EOF}},
+		"END.", []token.Token{token.Token{Tag: token.TagBegin}, token.Token{Tag: token.TagEnd, Ln: 1},
+		token.Token{Tag: token.TagPeriod, Ln: 1}, token.EOF}},
 	{"BEGIN\n" +
 		"CONST\n" +
 		"\tm = 7;\n" +
@@ -97,16 +97,16 @@ var multiTokenTests = []multiTokenTestPair{
 		"\ta := x;\n" +
 		"END;\n" +
 		"END.", []token.Token{token.Token{Tag: token.TagBegin},
-		token.Token{Tag: token.TagConst}, token.Token{Tag: token.TagIdentifier, Lex: "m"},
-		token.Token{Tag: token.TagEquals}, token.Token{Tag: token.TagInteger, Val: 7},
-		token.Token{Tag: token.TagSemicolon}, token.Token{Tag: token.TagProcedure},
-		token.Token{Tag: token.TagIdentifier, Lex: "multiply"}, token.Token{Tag: token.TagSemicolon},
-		token.Token{Tag: token.TagVar}, token.Token{Tag: token.TagIdentifier, Lex: "a"},
-		token.Token{Tag: token.TagSemicolon}, token.Token{Tag: token.TagBegin},
-		token.Token{Tag: token.TagIdentifier, Lex: "a"}, token.Token{Tag: token.TagAssignment},
-		token.Token{Tag: token.TagIdentifier, Lex: "x"}, token.Token{Tag: token.TagSemicolon},
-		token.Token{Tag: token.TagEnd}, token.Token{Tag: token.TagSemicolon},
-		token.Token{Tag: token.TagEnd}, token.Token{Tag: token.TagPeriod}, token.EOF}},
+		token.Token{Tag: token.TagConst, Ln: 1}, token.Token{Tag: token.TagIdentifier, Lex: "m", Ln: 2},
+		token.Token{Tag: token.TagEquals, Ln: 2}, token.Token{Tag: token.TagInteger, Val: 7, Ln: 2},
+		token.Token{Tag: token.TagSemicolon, Ln: 2}, token.Token{Tag: token.TagProcedure, Ln: 3},
+		token.Token{Tag: token.TagIdentifier, Lex: "multiply", Ln: 3}, token.Token{Tag: token.TagSemicolon, Ln: 3},
+		token.Token{Tag: token.TagVar, Ln: 4}, token.Token{Tag: token.TagIdentifier, Lex: "a", Ln: 4},
+		token.Token{Tag: token.TagSemicolon, Ln: 4}, token.Token{Tag: token.TagBegin, Ln: 5},
+		token.Token{Tag: token.TagIdentifier, Lex: "a", Ln: 6}, token.Token{Tag: token.TagAssignment, Ln: 6},
+		token.Token{Tag: token.TagIdentifier, Lex: "x", Ln: 6}, token.Token{Tag: token.TagSemicolon, Ln: 6},
+		token.Token{Tag: token.TagEnd, Ln: 7}, token.Token{Tag: token.TagSemicolon, Ln: 7},
+		token.Token{Tag: token.TagEnd, Ln: 8}, token.Token{Tag: token.TagPeriod, Ln: 8}, token.EOF}},
 	{"CONST a = 3;.", []token.Token{token.Token{Tag: token.TagConst}, token.Token{Tag: token.TagIdentifier, Lex: "a"},
 		token.Token{Tag: token.TagEquals}, token.Token{Tag: token.TagInteger, Val: 3}, token.Token{Tag: token.TagSemicolon},
 		token.Token{Tag: token.TagPeriod}, token.EOF}},

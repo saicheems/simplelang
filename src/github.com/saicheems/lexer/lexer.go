@@ -38,15 +38,13 @@ func NewFromString(s string) (*Lexer, *token.SymbolTable) {
 // occurs, it returns a Token of type Error. If the input stream is completed
 // then an io.EOF error is returned. Otherwise error is nil.
 func (l *Lexer) Scan() *token.Token {
-	tok := new(token.Token)
-
 	if l.readCharAndWhitespace() != nil {
 		return &token.EOF
 	}
 	if l.scanComments() != nil {
 		return &token.EOF
 	}
-
+	tok := &token.Token{Ln: l.ln}
 	if l.peek == '.' {
 		tok.Tag = token.TagPeriod
 		return tok

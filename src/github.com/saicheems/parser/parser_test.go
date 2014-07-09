@@ -13,7 +13,12 @@ type testPair struct {
 
 var tests = []testPair{
 	{"BEGIN x := 3; END.", true},
+	{"BEGIN ; END.", false},
+	{"\n\n\n\nBEGIN ; END.", false},
 	{"BEGIN END.", false},
+	{"BEGIN WHILE x = 3 DO END.", false},
+	{"BEGIN WHILE x = 3 DO BEGIN x := 3; END; END.", true},
+	{"BEGIN\n\tWHILE x = 3 DO\n\t\tBEGIN\n\t\t\tx := 3;\n\t\tEND\nEND.", false},
 	{"VAR x, y;.", false},
 	{"VAR x, squ; BEGIN x := 3; END.", true},
 	{"VAR x, squ; PROCEDURE square; BEGIN x := 3; END; BEGIN x := 3; END.", true},

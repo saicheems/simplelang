@@ -3,6 +3,8 @@
 package parser
 
 import (
+	"fmt"
+
 	"github.com/saicheems/lexer"
 	"github.com/saicheems/token"
 )
@@ -11,268 +13,258 @@ type Parser struct {
 	lex  *lexer.Lexer
 	top  *token.SymbolTable
 	look *token.Token
+	err  []error // Set error if we have a parse failure.
 }
 
 func New(l *lexer.Lexer, s *token.SymbolTable) *Parser {
 	p := new(Parser)
 	p.lex = l
 	p.top = s
+	// Initialize the error slice.
+	p.err = make([]error, 0)
+	p.move()
 	return p
 }
 
 // Parse begins reading the token stream recursively and generates an abstract
 // syntax tree (AST). It returns a pointer to the root node of an abstract
 // syntax tree. If there is an error in the parse, the return value will be nil.
-func (p *Parser) Parse() *AstNode {
-	p.move()
-	program := newAstNodeProgram()
+func (p *Parser) Parse() *Node {
 	block := p.parseBlock()
-	if block == nil {
+	// Expect a period.
+	p.match(token.TagPeriod)
+	if len(p.err) != 0 {
 		return nil
 	}
-	if !p.match(token.TagPeriod) {
-		return nil
-	}
-	return program
+	return newProgramNode(block)
 }
 
-// Parses a block and returns an AST node.
-func (p *Parser) parseBlock() *AstNode {
-	a := newAstNode(TypeBlock)
-	consts := p.parseConsts()
-	if consts == nil {
-		return nil
+func (p *Parser) parseBlock() *Node {
+	cons := p.parseConst()
+	vars := p.parseVar()
+	proc := p.parseProcedure()
+	stmt := p.parseStatement()
+	if stmt == nil {
+		p.err = append(p.err, fmt.Errorf("Syntax error near line %d.\n", p.look.Ln))
 	}
-	if !p.parseVars() {
-		return nil
-	}
-	if !p.parseProcedure() {
-		return nil
-	}
-	if !p.parseStatement() {
-		return nil
-	}
-	return a
+	return newBlockNode(cons, vars, proc, stmt)
 }
 
-// Parses consts and returns an AST node.
-func (p *Parser) parseConsts() *AstNode {
-	v := make([]*AstNode, 0)
-	if p.match(token.TagConst) {
-		for {
-			asgn := p.parseAssignment()
-			if asgn == nil {
-				return nil
-			}
-			v = append(v, asgn)
-			if !p.match(token.TagComma) {
-				break
-			}
-		}
-		if !p.match(token.TagSemicolon) {
-			return nil
-		}
+// Parses consts and returns an AST node. Returns nil if there are no consts.
+func (p *Parser) parseConst() *Node {
+	if !p.accept(token.TagConst) {
+		return nil
 	}
-	a := newAstNodeConst(v)
-	return a
-}
-
-func (p *Parser) parseVars() bool {
-	if p.match(token.TagVar) {
-		if !p.match(token.TagIdentifier) {
-			return false
-		}
-		for {
-			if !p.match(token.TagComma) {
-				break
-			}
-			if !p.match(token.TagIdentifier) {
-				return false
-			}
-		}
-		if !p.match(token.TagSemicolon) {
-			return false
-		}
-	}
-	return true
-}
-
-func (p *Parser) parseProcedure() bool {
+	cons := newConstNode()
 	for {
-		if !p.match(token.TagProcedure) {
+		p.match(token.TagIdentifier)
+		iden := p.getTerminalNodeFromLookahead()
+		p.match(token.TagEquals)
+		p.match(token.TagInteger)
+		inte := p.getTerminalNodeFromLookahead()
+		cons.appendNode(newAssignmentNode(iden, inte))
+		if !p.accept(token.TagComma) {
 			break
 		}
-		if !p.match(token.TagIdentifier) {
-			return false
-		}
-		if !p.match(token.TagSemicolon) {
-			return false
-		}
-		if p.parseBlock() == nil {
-			return false
-		}
-		if !p.match(token.TagSemicolon) {
-			return false
-		}
 	}
-	return true
+	p.match(token.TagSemicolon)
+	return cons
 }
 
-func (p *Parser) parseStatement() bool {
-	if p.match(token.TagIdentifier) {
-		if !p.match(token.TagAssignment) {
-			return false
-		}
-		if !p.parseExpression() {
-			return false
-		}
-	} else if p.match(token.TagCall) {
-		if !p.match(token.TagIdentifier) {
-			return false
-		}
-	} else if p.match(token.TagBegin) {
-		if !p.parseStatement() {
-			return false
-		}
-		if !p.match(token.TagSemicolon) {
-			return false
-		}
-		for {
-			if !p.parseStatement() {
-				break
-			}
-			if !p.match(token.TagSemicolon) {
-				return false
-			}
-		}
-		if !p.match(token.TagEnd) {
-			return false
-		}
-	} else if p.match(token.TagIf) {
-		if !p.parseCondition() {
-			return false
-		}
-		if !p.match(token.TagThen) {
-			return false
-		}
-		if !p.parseStatement() {
-			return false
-		}
-	} else {
-		if !p.match(token.TagWhile) {
-			// Expected statement.
-			return false
-		}
-		if !p.parseCondition() {
-			return false
-		}
-		if !p.match(token.TagDo) {
-			return false
-		}
-		if !p.parseStatement() {
-			return false
-		}
+// Parses vars and returns an AST node. Returns nil if there are no vars.
+func (p *Parser) parseVar() *Node {
+	if !p.accept(token.TagVar) {
+		return nil
 	}
-	return true
-}
-
-func (p *Parser) parseCondition() bool {
-	if p.match(token.TagOdd) {
-		if !p.parseExpression() {
-			return false
-		}
-	} else {
-		if !p.parseExpression() {
-			// Expected condition.
-			return false
-		}
-		if !(p.match(token.TagEquals) || p.match(token.TagNotEquals) ||
-			p.match(token.TagLessThan) || p.match(token.TagLessThanEqualTo) ||
-			p.match(token.TagGreaterThan) || p.match(token.TagGreaterThanEqualTo)) {
-			return false
-		}
-		if !p.parseExpression() {
-			return false
-		}
-	}
-	return true
-}
-
-func (p *Parser) parseExpression() bool {
-	p.match(token.TagPlus)
-	p.match(token.TagMinus)
-
-	if !p.parseTerm() {
-		return false
-	}
+	vars := newVarNode()
 	for {
-		if !(p.match(token.TagPlus) || p.match(token.TagMinus)) {
+		iden := p.getTerminalNodeFromLookahead()
+		p.match(token.TagIdentifier)
+		vars.appendNode(iden)
+		if !p.accept(token.TagComma) {
 			break
 		}
-		if !p.parseTerm() {
-			return false
-		}
 	}
-	return true
+	p.match(token.TagSemicolon)
+	return vars
 }
 
-func (p *Parser) parseTerm() bool {
-	if p.parseFactor() {
+// Parses procedures and returns an AST node. Returns nil if there are no procedures.
+func (p *Parser) parseProcedure() *Node {
+	if !p.accept(token.TagProcedure) {
+		return nil
+	}
+	proc := newProcedureParentNode()
+	for {
+		iden := p.getTerminalNodeFromLookahead()
+		p.match(token.TagIdentifier)
+		p.match(token.TagSemicolon)
+		bloc := p.parseBlock()
+		p.match(token.TagSemicolon)
+		proc.appendNode(newProcedureNode(iden, bloc))
+		if !p.accept(token.TagProcedure) {
+			break
+		}
+	}
+	return proc
+}
+
+func (p *Parser) parseStatement() *Node {
+	iden := p.getTerminalNodeFromLookahead()
+	if p.accept(token.TagIdentifier) {
+		p.match(token.TagAssignment)
+		expr := p.parseExpression()
+		return newAssignmentNode(iden, expr)
+	} else if p.accept(token.TagCall) {
+		iden := p.getTerminalNodeFromLookahead()
+		p.match(token.TagIdentifier)
+		return newCallNode(iden)
+	} else if p.accept(token.TagBegin) {
+		begin := newBeginNode()
+		stmt := p.parseStatement()
+		if stmt == nil {
+			p.err = append(p.err, fmt.Errorf("Syntax error near line %d.\n", p.look.Ln))
+		}
+		begin.appendNode(stmt)
+		p.match(token.TagSemicolon)
 		for {
-			if !(p.match(token.TagTimes) || p.match(token.TagDivide)) {
+			stmt := p.parseStatement()
+			if stmt == nil {
 				break
 			}
-			if !p.parseFactor() {
-				return false
-			}
+			begin.appendNode(stmt)
+			p.match(token.TagSemicolon)
+			break
 		}
-		return true
+		p.match(token.TagEnd)
+		return begin
+	} else if p.accept(token.TagIf) {
+		cond := p.parseCondition()
+		p.match(token.TagThen)
+		stmt := p.parseStatement()
+		if stmt == nil {
+			p.err = append(p.err, fmt.Errorf("Syntax error near line %d.\n", p.look.Ln))
+		}
+		return newIfThenNode(cond, stmt)
+	} else if p.accept(token.TagWhile) {
+		cond := p.parseCondition()
+		p.match(token.TagDo)
+		stmt := p.parseStatement()
+		if stmt == nil {
+			p.err = append(p.err, fmt.Errorf("Syntax error near line %d.\n", p.look.Ln))
+		}
+		return newWhileDoNode(cond, stmt)
 	}
-	return false
+	return nil
 }
 
-func (p *Parser) parseFactor() bool {
-	if p.match(token.TagIdentifier) {
-	} else if p.match(token.TagInteger) {
+func (p *Parser) parseCondition() *Node {
+	if p.accept(token.TagOdd) {
+		expr := p.parseExpression()
+		return newOddNode(expr)
 	} else {
-		if !p.match(token.TagLeftParen) {
-			return false
+		left := p.parseExpression()
+		equalOp := token.TagGreaterThanEqualTo
+		if p.accept(token.TagEquals) {
+			equalOp = token.TagEquals
+		} else if p.accept(token.TagNotEquals) {
+			equalOp = token.TagNotEquals
+		} else if p.accept(token.TagLessThan) {
+			equalOp = token.TagLessThan
+		} else if p.accept(token.TagGreaterThan) {
+			equalOp = token.TagGreaterThan
+		} else if p.accept(token.TagLessThanEqualTo) {
+			equalOp = token.TagLessThanEqualTo
+		} else if p.match(token.TagGreaterThanEqualTo) {
+			equalOp = token.TagGreaterThanEqualTo
 		}
-		if !p.parseExpression() {
-			return false
-		}
-		if !p.match(token.TagRightParen) {
-			return false
-		}
+		right := p.parseExpression()
+		return newCondNode(equalOp, left, right)
 	}
-	return true
 }
 
-func (p *Parser) parseAssignment() *AstNode {
-	a := newAstNodeTerminal(p.look)
-	if !p.match(token.TagIdentifier) {
-		return nil
+func (p *Parser) parseExpression() *Node {
+	op := int(token.TagPlus)
+	p.accept(token.TagPlus)
+	if p.accept(token.TagMinus) {
+		op = token.TagMinus
 	}
-	if !p.match(token.TagEquals) {
-		return nil
+	term := newMathNode(op, newTerminalNode(&token.Token{Tag: token.TagInteger, Val: 0}), p.parseTerm())
+	for {
+		if p.accept(token.TagPlus) {
+			op = token.TagPlus
+		} else if p.accept(token.TagMinus) {
+			op = token.TagPlus
+		} else {
+			break
+		}
+		second := p.parseTerm()
+		term = newMathNode(op, term, second)
 	}
-	b := newAstNodeTerminal(p.look)
-	if !p.match(token.TagInteger) {
-		return nil
-	}
-	asgn := newAstNodeAssigment(a, b)
-	return asgn
+	return term
 }
 
+func (p *Parser) parseTerm() *Node {
+	op := int(token.TagTimes)
+	fact := newMathNode(op, newTerminalNode(&token.Token{Tag: token.TagInteger, Val: 1}), p.parseFactor())
+	for {
+		if p.accept(token.TagTimes) {
+			op = token.TagTimes
+		} else if p.accept(token.TagDivide) {
+			op = token.TagDivide
+		} else {
+			break
+		}
+		second := p.parseFactor()
+		fact = newMathNode(op, fact, second)
+	}
+	return fact
+}
+
+func (p *Parser) parseFactor() *Node {
+	iden := p.getTerminalNodeFromLookahead()
+	if p.accept(token.TagIdentifier) || p.accept(token.TagInteger) {
+		return iden
+	} else {
+		p.match(token.TagLeftParen)
+		expr := p.parseExpression()
+		p.match(token.TagRightParen)
+		return expr
+	}
+}
+
+// Returns an AST node containing the lookahead token if it is of type integer
+// or identifier.
+func (p *Parser) getTerminalNodeFromLookahead() *Node {
+	// Only return a node if the lookahead token is an actual terminal.
+	if p.look.Tag == token.TagIdentifier || p.look.Tag == token.TagInteger {
+		return newTerminalNode(p.look)
+	}
+	return nil
+}
+
+// Moves the token stream forward by one token. Sets the lookahead token.
 func (p *Parser) move() {
 	tok := p.lex.Scan()
 	p.look = tok
 }
 
-func (p *Parser) match(t int) bool {
+// Takes a tag and checks the token stream to see if it matches. Returns true
+// and advancess the input stream if so, otherwise returns false.
+func (p *Parser) accept(t int) bool {
 	if p.look.Tag == t {
 		p.move()
 		return true
 	}
 	return false
+}
+
+// Does the same thing as accept but raises an error and appends it to the
+// parsers error list.
+func (p *Parser) match(t int) bool {
+	acc := p.accept(t)
+	if !acc {
+		p.err = append(p.err, fmt.Errorf("Syntax error near line %d.\n", p.look.Ln))
+	}
+	return acc
 }
