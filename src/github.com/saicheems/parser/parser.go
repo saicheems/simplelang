@@ -22,6 +22,9 @@ func New(l *lexer.Lexer, s *token.SymbolTable) *Parser {
 	p.top = s
 	// Initialize the error slice.
 	p.err = make([]error, 0)
+	if len(p.err) > 0 {
+		fmt.Println(p.err[0])
+	}
 	p.move()
 	return p
 }
@@ -44,9 +47,6 @@ func (p *Parser) parseBlock() *Node {
 	vars := p.parseVar()
 	proc := p.parseProcedure()
 	stmt := p.parseStatement()
-	if stmt == nil {
-		p.err = append(p.err, fmt.Errorf("Syntax error near line %d.\n", p.look.Ln))
-	}
 	return newBlockNode(cons, vars, proc, stmt)
 }
 
@@ -122,16 +122,14 @@ func (p *Parser) parseStatement() *Node {
 	} else if p.accept(token.TagBegin) {
 		begin := newBeginNode()
 		stmt := p.parseStatement()
-		if stmt == nil {
-			p.err = append(p.err, fmt.Errorf("Syntax error near line %d.\n", p.look.Ln))
-		}
 		begin.appendNode(stmt)
 		p.expect(token.TagSemicolon)
 		for {
-			stmt := p.parseStatement()
-			if stmt == nil {
+			if !p.compareLookahead(token.TagIdentifier, token.TagCall, token.TagBegin,
+				token.TagIf, token.TagWhile) {
 				break
 			}
+			stmt := p.parseStatement()
 			begin.appendNode(stmt)
 			p.expect(token.TagSemicolon)
 			break
@@ -142,20 +140,16 @@ func (p *Parser) parseStatement() *Node {
 		cond := p.parseCondition()
 		p.expect(token.TagThen)
 		stmt := p.parseStatement()
-		if stmt == nil {
-			p.err = append(p.err, fmt.Errorf("Syntax error near line %d.\n", p.look.Ln))
-		}
 		return newIfThenNode(cond, stmt)
 	} else if p.accept(token.TagWhile) {
 		cond := p.parseCondition()
 		p.expect(token.TagDo)
 		stmt := p.parseStatement()
-		if stmt == nil {
-			p.err = append(p.err, fmt.Errorf("Syntax error near line %d.\n", p.look.Ln))
-		}
 		return newWhileDoNode(cond, stmt)
+	} else {
+		p.appendError()
+		return nil
 	}
-	return nil
 }
 
 func (p *Parser) parseCondition() *Node {
@@ -249,6 +243,15 @@ func (p *Parser) move() {
 	p.look = tok
 }
 
+func (p *Parser) compareLookahead(t ...int) bool {
+	for i := 0; i < len(t); i++ {
+		if t[i] == p.look.Tag {
+			return true
+		}
+	}
+	return false
+}
+
 // Takes a tag and checks the token stream to see if it expectes. Returns true
 // and advancess the input stream if so, otherwise returns false.
 func (p *Parser) accept(t int) bool {
@@ -264,7 +267,11 @@ func (p *Parser) accept(t int) bool {
 func (p *Parser) expect(t int) bool {
 	acc := p.accept(t)
 	if !acc {
-		p.err = append(p.err, fmt.Errorf("Syntax error near line %d.\n", p.look.Ln))
+		p.appendError()
 	}
 	return acc
+}
+
+func (p *Parser) appendError() {
+	p.err = append(p.err, fmt.Errorf("Syntax error near line %d.\n", p.look.Ln))
 }
