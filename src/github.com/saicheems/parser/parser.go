@@ -22,9 +22,6 @@ func New(l *lexer.Lexer, s *token.SymbolTable) *Parser {
 	p.top = s
 	// Initialize the error slice.
 	p.err = make([]error, 0)
-	if len(p.err) > 0 {
-		fmt.Println(p.err[0])
-	}
 	p.move()
 	return p
 }
@@ -36,7 +33,8 @@ func (p *Parser) Parse() *Node {
 	block := p.parseBlock()
 	// Expect a period.
 	p.expect(token.TagPeriod)
-	if len(p.err) != 0 {
+	if len(p.err) > 0 {
+		fmt.Println(p.err[0])
 		return nil
 	}
 	return newProgramNode(block)
@@ -273,5 +271,5 @@ func (p *Parser) expect(t int) bool {
 }
 
 func (p *Parser) appendError() {
-	p.err = append(p.err, fmt.Errorf("Syntax error near line %d.\n", p.look.Ln))
+	p.err = append(p.err, fmt.Errorf("Syntax error near line %d.", p.look.Ln))
 }
