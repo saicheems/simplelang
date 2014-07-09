@@ -53,7 +53,7 @@ func TestScan(t *testing.T) {
 		p := New(l, s)
 		pass := p.Parse()
 
-		if pass != pair.expect {
+		if (pass != nil) != pair.expect {
 			t.Error(
 				"\nFor\n------\n"+pair.test,
 				"\n------\nExpected\n------\n", pair.expect,

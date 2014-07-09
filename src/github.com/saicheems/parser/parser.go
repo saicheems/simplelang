@@ -1,4 +1,5 @@
-// Package parser implements the parsing stage of the compilation.
+// Package parser implements the parsing stage of the compilation including the
+// parser and the abstract syntax tree.
 package parser
 
 import (
@@ -19,63 +20,61 @@ func New(l *lexer.Lexer, s *token.SymbolTable) *Parser {
 	return p
 }
 
-func (p *Parser) Parse() bool {
+// Parse begins reading the token stream recursively and generates an abstract
+// syntax tree (AST). It returns a pointer to the root node of an abstract
+// syntax tree. If there is an error in the parse, the return value will be nil.
+func (p *Parser) Parse() *AstNode {
 	p.move()
-	if !p.parseBlock() {
-		return false
+	program := newAstNodeProgram()
+	block := p.parseBlock()
+	if block == nil {
+		return nil
 	}
 	if !p.match(token.TagPeriod) {
-		return false
+		return nil
 	}
-	return true
+	return program
 }
 
-func (p *Parser) parseBlock() bool {
-	if !p.parseConsts() {
-		return false
+// Parses a block and returns an AST node.
+func (p *Parser) parseBlock() *AstNode {
+	a := newAstNode(TypeBlock)
+	consts := p.parseConsts()
+	if consts == nil {
+		return nil
 	}
 	if !p.parseVars() {
-		return false
+		return nil
 	}
 	if !p.parseProcedure() {
-		return false
+		return nil
 	}
 	if !p.parseStatement() {
-		return false
+		return nil
 	}
-	return true
+	return a
 }
 
-func (p *Parser) parseConsts() bool {
+// Parses consts and returns an AST node.
+func (p *Parser) parseConsts() *AstNode {
+	v := make([]*AstNode, 0)
 	if p.match(token.TagConst) {
-		if !p.match(token.TagIdentifier) {
-			return false
-		}
-		if !p.match(token.TagEquals) {
-			return false
-		}
-		if !p.match(token.TagInteger) {
-			return false
-		}
 		for {
+			asgn := p.parseAssignment()
+			if asgn == nil {
+				return nil
+			}
+			v = append(v, asgn)
 			if !p.match(token.TagComma) {
 				break
 			}
-			if !p.match(token.TagIdentifier) {
-				return false
-			}
-			if !p.match(token.TagEquals) {
-				return false
-			}
-			if !p.match(token.TagInteger) {
-				return false
-			}
 		}
 		if !p.match(token.TagSemicolon) {
-			return false
+			return nil
 		}
 	}
-	return true
+	a := newAstNodeConst(v)
+	return a
 }
 
 func (p *Parser) parseVars() bool {
@@ -109,7 +108,7 @@ func (p *Parser) parseProcedure() bool {
 		if !p.match(token.TagSemicolon) {
 			return false
 		}
-		if !p.parseBlock() {
+		if p.parseBlock() == nil {
 			return false
 		}
 		if !p.match(token.TagSemicolon) {
@@ -247,6 +246,22 @@ func (p *Parser) parseFactor() bool {
 		}
 	}
 	return true
+}
+
+func (p *Parser) parseAssignment() *AstNode {
+	a := newAstNodeTerminal(p.look)
+	if !p.match(token.TagIdentifier) {
+		return nil
+	}
+	if !p.match(token.TagEquals) {
+		return nil
+	}
+	b := newAstNodeTerminal(p.look)
+	if !p.match(token.TagInteger) {
+		return nil
+	}
+	asgn := newAstNodeAssigment(a, b)
+	return asgn
 }
 
 func (p *Parser) move() {
