@@ -32,7 +32,7 @@ func New(l *lexer.Lexer, s *token.SymbolTable) *Parser {
 func (p *Parser) Parse() *Node {
 	block := p.parseBlock()
 	// Expect a period.
-	p.match(token.TagPeriod)
+	p.expect(token.TagPeriod)
 	if len(p.err) != 0 {
 		return nil
 	}
@@ -57,17 +57,17 @@ func (p *Parser) parseConst() *Node {
 	}
 	cons := newConstNode()
 	for {
-		p.match(token.TagIdentifier)
+		p.expect(token.TagIdentifier)
 		iden := p.getTerminalNodeFromLookahead()
-		p.match(token.TagEquals)
-		p.match(token.TagInteger)
+		p.expect(token.TagEquals)
+		p.expect(token.TagInteger)
 		inte := p.getTerminalNodeFromLookahead()
 		cons.appendNode(newAssignmentNode(iden, inte))
 		if !p.accept(token.TagComma) {
 			break
 		}
 	}
-	p.match(token.TagSemicolon)
+	p.expect(token.TagSemicolon)
 	return cons
 }
 
@@ -79,13 +79,13 @@ func (p *Parser) parseVar() *Node {
 	vars := newVarNode()
 	for {
 		iden := p.getTerminalNodeFromLookahead()
-		p.match(token.TagIdentifier)
+		p.expect(token.TagIdentifier)
 		vars.appendNode(iden)
 		if !p.accept(token.TagComma) {
 			break
 		}
 	}
-	p.match(token.TagSemicolon)
+	p.expect(token.TagSemicolon)
 	return vars
 }
 
@@ -97,10 +97,10 @@ func (p *Parser) parseProcedure() *Node {
 	proc := newProcedureParentNode()
 	for {
 		iden := p.getTerminalNodeFromLookahead()
-		p.match(token.TagIdentifier)
-		p.match(token.TagSemicolon)
+		p.expect(token.TagIdentifier)
+		p.expect(token.TagSemicolon)
 		bloc := p.parseBlock()
-		p.match(token.TagSemicolon)
+		p.expect(token.TagSemicolon)
 		proc.appendNode(newProcedureNode(iden, bloc))
 		if !p.accept(token.TagProcedure) {
 			break
@@ -112,12 +112,12 @@ func (p *Parser) parseProcedure() *Node {
 func (p *Parser) parseStatement() *Node {
 	iden := p.getTerminalNodeFromLookahead()
 	if p.accept(token.TagIdentifier) {
-		p.match(token.TagAssignment)
+		p.expect(token.TagAssignment)
 		expr := p.parseExpression()
 		return newAssignmentNode(iden, expr)
 	} else if p.accept(token.TagCall) {
 		iden := p.getTerminalNodeFromLookahead()
-		p.match(token.TagIdentifier)
+		p.expect(token.TagIdentifier)
 		return newCallNode(iden)
 	} else if p.accept(token.TagBegin) {
 		begin := newBeginNode()
@@ -126,21 +126,21 @@ func (p *Parser) parseStatement() *Node {
 			p.err = append(p.err, fmt.Errorf("Syntax error near line %d.\n", p.look.Ln))
 		}
 		begin.appendNode(stmt)
-		p.match(token.TagSemicolon)
+		p.expect(token.TagSemicolon)
 		for {
 			stmt := p.parseStatement()
 			if stmt == nil {
 				break
 			}
 			begin.appendNode(stmt)
-			p.match(token.TagSemicolon)
+			p.expect(token.TagSemicolon)
 			break
 		}
-		p.match(token.TagEnd)
+		p.expect(token.TagEnd)
 		return begin
 	} else if p.accept(token.TagIf) {
 		cond := p.parseCondition()
-		p.match(token.TagThen)
+		p.expect(token.TagThen)
 		stmt := p.parseStatement()
 		if stmt == nil {
 			p.err = append(p.err, fmt.Errorf("Syntax error near line %d.\n", p.look.Ln))
@@ -148,7 +148,7 @@ func (p *Parser) parseStatement() *Node {
 		return newIfThenNode(cond, stmt)
 	} else if p.accept(token.TagWhile) {
 		cond := p.parseCondition()
-		p.match(token.TagDo)
+		p.expect(token.TagDo)
 		stmt := p.parseStatement()
 		if stmt == nil {
 			p.err = append(p.err, fmt.Errorf("Syntax error near line %d.\n", p.look.Ln))
@@ -175,7 +175,7 @@ func (p *Parser) parseCondition() *Node {
 			equalOp = token.TagGreaterThan
 		} else if p.accept(token.TagLessThanEqualTo) {
 			equalOp = token.TagLessThanEqualTo
-		} else if p.match(token.TagGreaterThanEqualTo) {
+		} else if p.expect(token.TagGreaterThanEqualTo) {
 			equalOp = token.TagGreaterThanEqualTo
 		}
 		right := p.parseExpression()
@@ -226,9 +226,9 @@ func (p *Parser) parseFactor() *Node {
 	if p.accept(token.TagIdentifier) || p.accept(token.TagInteger) {
 		return iden
 	} else {
-		p.match(token.TagLeftParen)
+		p.expect(token.TagLeftParen)
 		expr := p.parseExpression()
-		p.match(token.TagRightParen)
+		p.expect(token.TagRightParen)
 		return expr
 	}
 }
@@ -249,7 +249,7 @@ func (p *Parser) move() {
 	p.look = tok
 }
 
-// Takes a tag and checks the token stream to see if it matches. Returns true
+// Takes a tag and checks the token stream to see if it expectes. Returns true
 // and advancess the input stream if so, otherwise returns false.
 func (p *Parser) accept(t int) bool {
 	if p.look.Tag == t {
@@ -261,7 +261,7 @@ func (p *Parser) accept(t int) bool {
 
 // Does the same thing as accept but raises an error and appends it to the
 // parsers error list.
-func (p *Parser) match(t int) bool {
+func (p *Parser) expect(t int) bool {
 	acc := p.accept(t)
 	if !acc {
 		p.err = append(p.err, fmt.Errorf("Syntax error near line %d.\n", p.look.Ln))
