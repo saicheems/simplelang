@@ -265,6 +265,7 @@ func (p *Parser) accept(t int) bool {
 func (p *Parser) expect(t int) bool {
 	acc := p.accept(t)
 	if !acc {
+		p.move()
 		p.appendError()
 	}
 	return acc

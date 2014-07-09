@@ -19,6 +19,7 @@ var tests = []testPair{
 	{"BEGIN END.", false},
 	{"BEGIN WHILE x = 3 DO END.", false},
 	{"BEGIN WHILE x = 3 DO BEGIN x := 3; END; END.", true},
+	{"BEGIN hello := ^asdf; END.", false},
 	{"BEGIN\n\tWHILE x = 3 DO\n\t\tBEGIN\n\t\t\tx := 3;\n\t\tEND\nEND.", false},
 	{"VAR x, y;.", false},
 	{"VAR x, squ; BEGIN x := 3; END.", true},
