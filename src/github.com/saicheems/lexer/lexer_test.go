@@ -114,6 +114,9 @@ var multiTokenTests = []multiTokenTestPair{
 		token.UnexpectedChar, token.Token{Tag: token.TagInteger, Val: 323}, token.Token{Tag: token.TagSemicolon}, token.EOF}},
 	{"x := ^asdf;", []token.Token{token.Token{Tag: token.TagIdentifier, Lex: "x"}, token.Token{Tag: token.TagAssignment},
 		token.UnexpectedChar, token.Token{Tag: token.TagIdentifier, Lex: "asdf"}, token.Token{Tag: token.TagSemicolon}, token.EOF}},
+	{"x:=a+b;", []token.Token{token.Token{Tag: token.TagIdentifier, Lex: "x"}, token.Token{Tag: token.TagAssignment},
+		token.Token{Tag: token.TagIdentifier, Lex: "a"}, token.Token{Tag: token.TagPlus},
+		token.Token{Tag: token.TagIdentifier, Lex: "b"}, token.Token{Tag: token.TagSemicolon}, token.EOF}},
 }
 
 func TestScan(t *testing.T) {

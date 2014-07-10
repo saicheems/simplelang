@@ -128,7 +128,6 @@ func (p *Parser) parseStatement() *Node {
 			stmt := p.parseStatement()
 			begin.appendNode(stmt)
 			p.expect(token.TagSemicolon)
-			break
 		}
 		p.expect(token.TagEnd)
 		return begin

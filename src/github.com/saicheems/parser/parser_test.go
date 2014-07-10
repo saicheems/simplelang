@@ -55,6 +55,16 @@ var tests = []testPair{
 		"\tx := x + 1;\n" +
 		"\tEND;\n" +
 		"END.\n", true},
+	{"CONST x=3,y=4;\n" +
+		"VAR a,b,c;\n" +
+		"PROCEDURE sum;\n" +
+		"\tVAR a,b;\n" +
+		"\tBEGIN\n" +
+		"\t\ta:=x;\n" +
+		"\t\tb:=y;\n" +
+		"\t\tc:=a+b;\n" +
+		"\tEND;\n" +
+		"CALL sum.\n", true},
 }
 
 func TestScan(t *testing.T) {
