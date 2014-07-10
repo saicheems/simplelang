@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"github.com/saicheems/symtable"
 	"github.com/saicheems/token"
 )
 
@@ -27,7 +28,7 @@ type Node struct {
 	Type     int
 	Op       int
 	Tok      *token.Token
-	Sym      *token.SymbolTable
+	Sym      *symtable.SymbolTable
 	Children []*Node
 }
 
