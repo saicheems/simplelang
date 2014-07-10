@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/saicheems/analyser"
 	"github.com/saicheems/lexer"
 	"github.com/saicheems/parser"
-	"github.com/saicheems/token"
 )
 
 func main() {
@@ -21,8 +21,8 @@ func main() {
 		fmt.Println("Error opening file.")
 		return
 	}
-	s := token.NewSymbolTable()
-	l := lexer.New(f, s)
-	p := parser.New(l, s)
-	p.Parse()
+	l := lexer.New(f)
+	p := parser.New(l)
+	a := analyser.New(p)
+	a.Analyse()
 }

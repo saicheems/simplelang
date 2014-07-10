@@ -11,15 +11,13 @@ import (
 
 type Parser struct {
 	lex  *lexer.Lexer
-	top  *token.SymbolTable
 	look *token.Token
 	err  []error // Set error if we have a parse failure.
 }
 
-func New(l *lexer.Lexer, s *token.SymbolTable) *Parser {
+func New(l *lexer.Lexer) *Parser {
 	p := new(Parser)
 	p.lex = l
-	p.top = s
 	// Initialize the error slice.
 	p.err = make([]error, 0)
 	p.move()
@@ -50,16 +48,16 @@ func (p *Parser) parseBlock() *Node {
 
 // Parses consts and returns an AST node. Returns nil if there are no consts.
 func (p *Parser) parseConst() *Node {
-	if !p.accept(token.TagConst) {
-		return nil
-	}
 	cons := newConstNode()
+	if !p.accept(token.TagConst) {
+		return cons
+	}
 	for {
-		p.expect(token.TagIdentifier)
 		iden := p.getTerminalNodeFromLookahead()
+		p.expect(token.TagIdentifier)
 		p.expect(token.TagEquals)
-		p.expect(token.TagInteger)
 		inte := p.getTerminalNodeFromLookahead()
+		p.expect(token.TagInteger)
 		cons.appendNode(newAssignmentNode(iden, inte))
 		if !p.accept(token.TagComma) {
 			break
@@ -71,10 +69,10 @@ func (p *Parser) parseConst() *Node {
 
 // Parses vars and returns an AST node. Returns nil if there are no vars.
 func (p *Parser) parseVar() *Node {
-	if !p.accept(token.TagVar) {
-		return nil
-	}
 	vars := newVarNode()
+	if !p.accept(token.TagVar) {
+		return vars
+	}
 	for {
 		iden := p.getTerminalNodeFromLookahead()
 		p.expect(token.TagIdentifier)
@@ -89,10 +87,10 @@ func (p *Parser) parseVar() *Node {
 
 // Parses procedures and returns an AST node. Returns nil if there are no procedures.
 func (p *Parser) parseProcedure() *Node {
-	if !p.accept(token.TagProcedure) {
-		return nil
-	}
 	proc := newProcedureParentNode()
+	if !p.accept(token.TagProcedure) {
+		return proc
+	}
 	for {
 		iden := p.getTerminalNodeFromLookahead()
 		p.expect(token.TagIdentifier)

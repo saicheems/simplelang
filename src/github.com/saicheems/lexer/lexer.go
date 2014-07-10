@@ -12,26 +12,26 @@ import (
 
 type Lexer struct {
 	rd   *bufio.Reader
-	sym  *token.SymbolTable
-	peek byte // Peek byte.
-	ln   int  // Current line number in input stream.
+	res  map[string]int // Map of reserved keywords.
+	peek byte           // Peek byte.
+	ln   int            // Current line number in input stream.
 }
 
-func New(f *os.File, s *token.SymbolTable) *Lexer {
+func New(f *os.File) *Lexer {
 	l := new(Lexer)
 	l.rd = bufio.NewReader(f)
-	l.sym = s
+	l.res = make(map[string]int)
 	l.loadKeywords()
 	return l
 }
 
 // Used to create a new lexer for testing.
-func NewFromString(s string) (*Lexer, *token.SymbolTable) {
+func NewFromString(s string) *Lexer {
 	l := new(Lexer)
 	l.rd = bufio.NewReader(strings.NewReader(s))
-	l.sym = token.NewSymbolTable()
+	l.res = make(map[string]int)
 	l.loadKeywords()
-	return l, l.sym
+	return l
 }
 
 // Scan returns the next valid token from the input stream. If a lexing error
@@ -137,7 +137,9 @@ func (l *Lexer) Scan() *token.Token {
 		}
 		lexeme := strBuf.String()
 		tok.Tag = token.TagIdentifier
-		tok.Tag = l.sym.Put(tok.Tag, lexeme)
+		if l.res[lexeme] != 0 {
+			tok.Tag = l.res[lexeme]
+		}
 		// We won't set the lexeme of the token if it's a keyword.
 		if tok.Tag == token.TagIdentifier {
 			tok.Lex = lexeme
@@ -223,17 +225,17 @@ func (l *Lexer) scanComments() error {
 
 // Loads reserved keywords into the symbol table. Should be called on init.
 func (l *Lexer) loadKeywords() {
-	l.sym.Put(token.TagConst, "CONST")
-	l.sym.Put(token.TagVar, "VAR")
-	l.sym.Put(token.TagProcedure, "PROCEDURE")
-	l.sym.Put(token.TagCall, "CALL")
-	l.sym.Put(token.TagBegin, "BEGIN")
-	l.sym.Put(token.TagEnd, "END")
-	l.sym.Put(token.TagIf, "IF")
-	l.sym.Put(token.TagThen, "THEN")
-	l.sym.Put(token.TagWhile, "WHILE")
-	l.sym.Put(token.TagDo, "DO")
-	l.sym.Put(token.TagOdd, "ODD")
+	l.res["CONST"] = token.TagConst
+	l.res["VAR"] = token.TagVar
+	l.res["PROCEDURE"] = token.TagProcedure
+	l.res["CALL"] = token.TagCall
+	l.res["BEGIN"] = token.TagBegin
+	l.res["END"] = token.TagEnd
+	l.res["IF"] = token.TagIf
+	l.res["THEN"] = token.TagThen
+	l.res["WHILE"] = token.TagWhile
+	l.res["DO"] = token.TagDo
+	l.res["ODD"] = token.TagOdd
 }
 
 func (l *Lexer) readChar() error {

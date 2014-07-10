@@ -27,6 +27,7 @@ type Node struct {
 	Type     int
 	Op       int
 	Tok      *token.Token
+	Sym      *token.SymbolTable
 	Children []*Node
 }
 

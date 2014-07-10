@@ -118,7 +118,7 @@ var multiTokenTests = []multiTokenTestPair{
 
 func TestScan(t *testing.T) {
 	for _, pair := range singleTokenTests {
-		l, _ := NewFromString(pair.test)
+		l := NewFromString(pair.test)
 		tok := l.Scan()
 
 		if *tok != pair.expect {
@@ -130,7 +130,7 @@ func TestScan(t *testing.T) {
 		}
 	}
 	for _, pair := range multiTokenTests {
-		l, _ := NewFromString(pair.test)
+		l := NewFromString(pair.test)
 		out := []token.Token{}
 		for {
 			tok := l.Scan()
