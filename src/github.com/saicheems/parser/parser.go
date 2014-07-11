@@ -5,6 +5,7 @@ package parser
 import (
 	"fmt"
 
+	"github.com/saicheems/ast"
 	"github.com/saicheems/lexer"
 	"github.com/saicheems/token"
 )
@@ -27,7 +28,7 @@ func New(l *lexer.Lexer) *Parser {
 // Parse begins reading the token stream recursively and generates an abstract
 // syntax tree (AST). It returns a pointer to the root node of an abstract
 // syntax tree. If there is an error in the parse, the return value will be nil.
-func (p *Parser) Parse() *Node {
+func (p *Parser) Parse() *ast.Node {
 	block := p.parseBlock()
 	// Expect a period.
 	p.expect(token.Period)
@@ -35,20 +36,20 @@ func (p *Parser) Parse() *Node {
 		fmt.Println(p.err[0])
 		return nil
 	}
-	return newProgramNode(block)
+	return ast.NewProgramNode(block)
 }
 
-func (p *Parser) parseBlock() *Node {
+func (p *Parser) parseBlock() *ast.Node {
 	cons := p.parseConst()
 	vars := p.parseVar()
 	proc := p.parseProcedure()
 	stmt := p.parseStatement()
-	return newBlockNode(cons, vars, proc, stmt)
+	return ast.NewBlockNode(cons, vars, proc, stmt)
 }
 
 // Parses consts and returns an AST node. Returns nil if there are no consts.
-func (p *Parser) parseConst() *Node {
-	cons := newConstNode()
+func (p *Parser) parseConst() *ast.Node {
+	cons := ast.NewConstNode()
 	if !p.accept(token.Const) {
 		return cons
 	}
@@ -58,7 +59,7 @@ func (p *Parser) parseConst() *Node {
 		p.expect(token.Equals)
 		inte := p.getTerminalNodeFromLookahead()
 		p.expect(token.Integer)
-		cons.appendNode(newAssignmentNode(iden, inte))
+		cons.AppendNode(ast.NewAssignmentNode(iden, inte))
 		if !p.accept(token.Comma) {
 			break
 		}
@@ -68,15 +69,15 @@ func (p *Parser) parseConst() *Node {
 }
 
 // Parses vars and returns an AST node. Returns nil if there are no vars.
-func (p *Parser) parseVar() *Node {
-	vars := newVarNode()
+func (p *Parser) parseVar() *ast.Node {
+	vars := ast.NewVarNode()
 	if !p.accept(token.Var) {
 		return vars
 	}
 	for {
 		iden := p.getTerminalNodeFromLookahead()
 		p.expect(token.Identifier)
-		vars.appendNode(iden)
+		vars.AppendNode(iden)
 		if !p.accept(token.Comma) {
 			break
 		}
@@ -86,8 +87,8 @@ func (p *Parser) parseVar() *Node {
 }
 
 // Parses procedures and returns an AST node. Returns nil if there are no procedures.
-func (p *Parser) parseProcedure() *Node {
-	proc := newProcedureParentNode()
+func (p *Parser) parseProcedure() *ast.Node {
+	proc := ast.NewProcedureParentNode()
 	if !p.accept(token.Procedure) {
 		return proc
 	}
@@ -97,7 +98,7 @@ func (p *Parser) parseProcedure() *Node {
 		p.expect(token.Semicolon)
 		bloc := p.parseBlock()
 		p.expect(token.Semicolon)
-		proc.appendNode(newProcedureNode(iden, bloc))
+		proc.AppendNode(ast.NewProcedureNode(iden, bloc))
 		if !p.accept(token.Procedure) {
 			break
 		}
@@ -105,20 +106,20 @@ func (p *Parser) parseProcedure() *Node {
 	return proc
 }
 
-func (p *Parser) parseStatement() *Node {
+func (p *Parser) parseStatement() *ast.Node {
 	iden := p.getTerminalNodeFromLookahead()
 	if p.accept(token.Identifier) {
 		p.expect(token.Assignment)
 		expr := p.parseExpression()
-		return newAssignmentNode(iden, expr)
+		return ast.NewAssignmentNode(iden, expr)
 	} else if p.accept(token.Call) {
 		iden := p.getTerminalNodeFromLookahead()
 		p.expect(token.Identifier)
-		return newCallNode(iden)
+		return ast.NewCallNode(iden)
 	} else if p.accept(token.Begin) {
-		begin := newBeginNode()
+		begin := ast.NewBeginNode()
 		stmt := p.parseStatement()
-		begin.appendNode(stmt)
+		begin.AppendNode(stmt)
 		p.expect(token.Semicolon)
 		for {
 			if !p.compareLookahead(token.Identifier, token.Call, token.Begin,
@@ -126,7 +127,7 @@ func (p *Parser) parseStatement() *Node {
 				break
 			}
 			stmt := p.parseStatement()
-			begin.appendNode(stmt)
+			begin.AppendNode(stmt)
 			p.expect(token.Semicolon)
 		}
 		p.expect(token.End)
@@ -135,22 +136,22 @@ func (p *Parser) parseStatement() *Node {
 		cond := p.parseCondition()
 		p.expect(token.Then)
 		stmt := p.parseStatement()
-		return newIfThenNode(cond, stmt)
+		return ast.NewIfThenNode(cond, stmt)
 	} else if p.accept(token.While) {
 		cond := p.parseCondition()
 		p.expect(token.Do)
 		stmt := p.parseStatement()
-		return newWhileDoNode(cond, stmt)
+		return ast.NewWhileDoNode(cond, stmt)
 	} else {
 		p.appendError()
 		return nil
 	}
 }
 
-func (p *Parser) parseCondition() *Node {
+func (p *Parser) parseCondition() *ast.Node {
 	if p.accept(token.Odd) {
 		expr := p.parseExpression()
-		return newOddNode(expr)
+		return ast.NewOddNode(expr)
 	} else {
 		left := p.parseExpression()
 		equalOp := token.GreaterThanEqualTo
@@ -168,17 +169,17 @@ func (p *Parser) parseCondition() *Node {
 			equalOp = token.GreaterThanEqualTo
 		}
 		right := p.parseExpression()
-		return newCondNode(equalOp, left, right)
+		return ast.NewCondNode(equalOp, left, right)
 	}
 }
 
-func (p *Parser) parseExpression() *Node {
+func (p *Parser) parseExpression() *ast.Node {
 	op := int(token.Plus)
 	p.accept(token.Plus)
 	if p.accept(token.Minus) {
 		op = token.Minus
 	}
-	term := newMathNode(op, newTerminalNode(&token.Token{Tag: token.Integer, Val: 0}), p.parseTerm())
+	term := ast.NewMathNode(op, ast.NewTerminalNode(&token.Token{Tag: token.Integer, Val: 0}), p.parseTerm())
 	for {
 		if p.accept(token.Plus) {
 			op = token.Plus
@@ -188,14 +189,14 @@ func (p *Parser) parseExpression() *Node {
 			break
 		}
 		second := p.parseTerm()
-		term = newMathNode(op, term, second)
+		term = ast.NewMathNode(op, term, second)
 	}
 	return term
 }
 
-func (p *Parser) parseTerm() *Node {
+func (p *Parser) parseTerm() *ast.Node {
 	op := int(token.Times)
-	fact := newMathNode(op, newTerminalNode(&token.Token{Tag: token.Integer, Val: 1}), p.parseFactor())
+	fact := ast.NewMathNode(op, ast.NewTerminalNode(&token.Token{Tag: token.Integer, Val: 1}), p.parseFactor())
 	for {
 		if p.accept(token.Times) {
 			op = token.Times
@@ -205,12 +206,12 @@ func (p *Parser) parseTerm() *Node {
 			break
 		}
 		second := p.parseFactor()
-		fact = newMathNode(op, fact, second)
+		fact = ast.NewMathNode(op, fact, second)
 	}
 	return fact
 }
 
-func (p *Parser) parseFactor() *Node {
+func (p *Parser) parseFactor() *ast.Node {
 	iden := p.getTerminalNodeFromLookahead()
 	if p.accept(token.Identifier) || p.accept(token.Integer) {
 		return iden
@@ -224,10 +225,10 @@ func (p *Parser) parseFactor() *Node {
 
 // Returns an AST node containing the lookahead token if it is of type integer
 // or identifier.
-func (p *Parser) getTerminalNodeFromLookahead() *Node {
+func (p *Parser) getTerminalNodeFromLookahead() *ast.Node {
 	// Only return a node if the lookahead token is an actual terminal.
 	if p.look.Tag == token.Identifier || p.look.Tag == token.Integer {
-		return newTerminalNode(p.look)
+		return ast.NewTerminalNode(p.look)
 	}
 	return nil
 }
