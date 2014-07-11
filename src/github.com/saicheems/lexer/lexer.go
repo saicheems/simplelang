@@ -39,84 +39,78 @@ func NewFromString(s string) *Lexer {
 // then an io.EOF error is returned. Otherwise error is nil.
 func (l *Lexer) Scan() *token.Token {
 	if l.readCharAndWhitespace() != nil {
-		return &token.EOF
+		return token.EOF
 	}
 	if l.scanComments() != nil {
-		return &token.EOF
+		return token.EOF
 	}
-	tok := &token.Token{Ln: l.ln}
+	tok := token.New(l.ln)
 	if l.peek == '.' {
-		tok.Tag = token.TagPeriod
+		tok.Tag = token.Period
 		return tok
 	} else if l.peek == ',' {
-		tok.Tag = token.TagComma
+		tok.Tag = token.Comma
 		return tok
 	} else if l.peek == ';' {
-		tok.Tag = token.TagSemicolon
+		tok.Tag = token.Semicolon
 		return tok
 	} else if l.peek == '=' {
-		tok.Tag = token.TagEquals
+		tok.Tag = token.Equals
 		return tok
 	} else if l.peek == '#' {
-		tok.Tag = token.TagNotEquals
+		tok.Tag = token.NotEquals
 		return tok
 	} else if l.peek == '<' {
-		tok.Tag = token.TagLessThan
+		tok.Tag = token.LessThan
 		// We won't do anything about an error here.
 		m, _ := l.readCharAndMatch('=')
 		if m {
-			tok.Tag = token.TagLessThanEqualTo
+			tok.Tag = token.LessThanEqualTo
 			return tok
 		} else {
 			l.unreadChar()
 		}
 		return tok
 	} else if l.peek == '>' {
-		tok.Tag = token.TagGreaterThan
+		tok.Tag = token.GreaterThan
 		// We won't do anything about an error here.
 		m, _ := l.readCharAndMatch('=')
 		if m {
-			tok.Tag = token.TagGreaterThanEqualTo
+			tok.Tag = token.GreaterThanEqualTo
 			return tok
 		} else {
 			l.unreadChar()
 		}
 		return tok
 	} else if l.peek == '*' {
-		tok.Tag = token.TagTimes
+		tok.Tag = token.Times
 		return tok
 	} else if l.peek == '/' {
-		tok.Tag = token.TagDivide
-		return tok
-	} else if l.peek == '?' {
-		tok.Tag = token.TagQuestion
-		return tok
-	} else if l.peek == '!' {
-		tok.Tag = token.TagExclamation
+		tok.Tag = token.Divide
 		return tok
 	} else if l.peek == '+' {
-		tok.Tag = token.TagPlus
+		tok.Tag = token.Plus
 		return tok
 	} else if l.peek == '-' {
-		tok.Tag = token.TagMinus
+		tok.Tag = token.Minus
 		return tok
 	} else if l.peek == '{' {
-		tok.Tag = token.TagLeftCurlyBrace
+		tok.Tag = token.LeftCurlyBrace
 		return tok
 	} else if l.peek == '}' {
-		tok.Tag = token.TagRightCurlyBrace
+		tok.Tag = token.RightCurlyBrace
 		return tok
 	} else if l.peek == '(' {
-		tok.Tag = token.TagLeftParen
+		tok.Tag = token.LeftParen
 		return tok
 	} else if l.peek == ')' {
-		tok.Tag = token.TagRightParen
+		tok.Tag = token.RightParen
 		return tok
 	} else if l.peek == ':' {
 		// We won't do anything about an error here.
 		m, _ := l.readCharAndMatch('=')
 		if m {
-			tok.Tag = token.TagAssignment
+			tok.Tag = token.Assignment
 			return tok
 		} else {
 			l.unreadChar()
@@ -136,12 +130,12 @@ func (l *Lexer) Scan() *token.Token {
 			}
 		}
 		lexeme := strBuf.String()
-		tok.Tag = token.TagIdentifier
+		tok.Tag = token.Identifier
 		if l.res[lexeme] != 0 {
 			tok.Tag = l.res[lexeme]
 		}
 		// We won't set the lexeme of the token if it's a keyword.
-		if tok.Tag == token.TagIdentifier {
+		if tok.Tag == token.Identifier {
 			tok.Lex = lexeme
 		}
 		return tok
@@ -159,11 +153,11 @@ func (l *Lexer) Scan() *token.Token {
 				break
 			}
 		}
-		tok.Tag = token.TagInteger
+		tok.Tag = token.Integer
 		tok.Val = v
 		return tok
 	}
-	return &token.UnexpectedChar
+	return token.UnexpectedChar
 }
 
 func (l *Lexer) scanComments() error {
@@ -225,17 +219,17 @@ func (l *Lexer) scanComments() error {
 
 // Loads reserved keywords into the symbol table. Should be called on init.
 func (l *Lexer) loadKeywords() {
-	l.res["CONST"] = token.TagConst
-	l.res["VAR"] = token.TagVar
-	l.res["PROCEDURE"] = token.TagProcedure
-	l.res["CALL"] = token.TagCall
-	l.res["BEGIN"] = token.TagBegin
-	l.res["END"] = token.TagEnd
-	l.res["IF"] = token.TagIf
-	l.res["THEN"] = token.TagThen
-	l.res["WHILE"] = token.TagWhile
-	l.res["DO"] = token.TagDo
-	l.res["ODD"] = token.TagOdd
+	l.res["CONST"] = token.Const
+	l.res["VAR"] = token.Var
+	l.res["PROCEDURE"] = token.Procedure
+	l.res["CALL"] = token.Call
+	l.res["BEGIN"] = token.Begin
+	l.res["END"] = token.End
+	l.res["IF"] = token.If
+	l.res["THEN"] = token.Then
+	l.res["WHILE"] = token.While
+	l.res["DO"] = token.Do
+	l.res["ODD"] = token.Odd
 }
 
 func (l *Lexer) readChar() error {

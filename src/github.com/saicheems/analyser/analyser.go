@@ -47,15 +47,15 @@ func (a *Analyser) loadSymbolTables(ast *parser.Node) {
 
 	for _, node := range cons.Children {
 		iden := node.Children[0]
-		sym.Put(token.SymbolConstant, iden.Tok.Lex)
+		sym.Put(symtable.Constant, iden.Tok.Lex)
 	}
 	for _, node := range vars.Children {
-		sym.Put(token.SymbolInteger, node.Tok.Lex)
+		sym.Put(symtable.Integer, node.Tok.Lex)
 	}
 	for _, node := range proc.Children {
 		iden := node.Children[0]
 		bloc := node.Children[1]
-		sym.Put(token.SymbolProcedure, iden.Tok.Lex)
+		sym.Put(symtable.Procedure, iden.Tok.Lex)
 		// Recursively load on inner procedures.
 		a.loadSymbolTables(bloc)
 
@@ -76,7 +76,7 @@ func (a *Analyser) recurseVarCheck(ast *parser.Node, syms []*symtable.SymbolTabl
 	// If the immediate parent symbol table has constants of the same name, then there's an
 	// ambiguity issue.
 	for _, node := range ast.Children {
-		if a.findSymbolInTables(node.Tok.Lex, token.SymbolConstant, syms) {
+		if a.findSymbolInTables(node.Tok.Lex, symtable.Constant, syms) {
 			a.appendError(node.Tok)
 		}
 	}
@@ -119,14 +119,14 @@ func (a *Analyser) assignmentCheck(ast *parser.Node, syms []*symtable.SymbolTabl
 	iden := ast.Children[0]
 	expr := ast.Children[1]
 	a.recurseExpressionCheck(expr, syms)
-	if !a.findSymbolInTables(iden.Tok.Lex, token.SymbolInteger, syms) {
+	if !a.findSymbolInTables(iden.Tok.Lex, symtable.Integer, syms) {
 		a.appendError(iden.Tok)
 	}
 }
 
 func (a *Analyser) callCheck(ast *parser.Node, syms []*symtable.SymbolTable) {
 	iden := ast.Children[0]
-	if !a.findSymbolInTables(iden.Tok.Lex, token.SymbolInteger, syms) {
+	if !a.findSymbolInTables(iden.Tok.Lex, symtable.Integer, syms) {
 		a.appendError(iden.Tok)
 	}
 	a.appendError(iden.Tok)
@@ -145,9 +145,9 @@ func (a *Analyser) whileDoCheck(ast *parser.Node, syms []*symtable.SymbolTable) 
 func (a *Analyser) recurseExpressionCheck(ast *parser.Node, syms []*symtable.SymbolTable) {
 	if ast.Type == parser.TypeTerminal {
 		// Only look through the symbol table if it's an idenfitier!
-		if ast.Tok.Tag == token.TagIdentifier {
-			if !a.findSymbolInTables(ast.Tok.Lex, token.SymbolInteger, syms) &&
-				!a.findSymbolInTables(ast.Tok.Lex, token.SymbolConstant, syms) {
+		if ast.Tok.Tag == token.Identifier {
+			if !a.findSymbolInTables(ast.Tok.Lex, symtable.Integer, syms) &&
+				!a.findSymbolInTables(ast.Tok.Lex, symtable.Constant, syms) {
 				a.appendError(ast.Tok)
 			}
 		}

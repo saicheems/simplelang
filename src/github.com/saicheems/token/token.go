@@ -1,5 +1,4 @@
-// Package token implements the token type. It also includes a symbol table to
-// track identifiers through the compilation stages.
+// Package token implements the token type.
 package token
 
 import (
@@ -8,50 +7,60 @@ import (
 )
 
 const (
-	TagPeriod             = '.'
-	TagComma              = ','
-	TagSemicolon          = ';'
-	TagEquals             = '='
-	TagNotEquals          = '#'
-	TagLessThan           = '<'
-	TagGreaterThan        = '>'
-	TagTimes              = '*'
-	TagDivide             = '/'
-	TagQuestion           = '?'
-	TagExclamation        = '!'
-	TagPlus               = '+'
-	TagMinus              = '-'
-	TagLeftCurlyBrace     = '{'
-	TagRightCurlyBrace    = '}'
-	TagLeftParen          = '('
-	TagRightParen         = ')'
-	TagInteger            = 256
-	TagConst              = 257
-	TagVar                = 258
-	TagIdentifier         = 259
-	TagProcedure          = 260
-	TagAssignment         = 261
-	TagCall               = 262
-	TagBegin              = 263
-	TagEnd                = 264
-	TagIf                 = 265
-	TagThen               = 266
-	TagWhile              = 267
-	TagDo                 = 268
-	TagOdd                = 269
-	TagLessThanEqualTo    = 270
-	TagGreaterThanEqualTo = 271
+	Period             = iota // .
+	Comma                     // ,
+	Semicolon                 // ;
+	Equals                    // =
+	NotEquals                 // #
+	LessThan                  // <
+	GreaterThan               // >
+	LessThanEqualTo           // <=
+	GreaterThanEqualTo        // >=
+	Plus                      // +
+	Minus                     // -
+	Times                     // *
+	Divide                    // /
+	LeftCurlyBrace            // {
+	RightCurlyBrace           // }
+	LeftParen                 // (
+	RightParen                // )
+	Assignment                // :=
+	Integer                   // ex. 42
+	Identifier                // ex. abc, abc123, ABC123
+	Begin                     // BEGIN
+	Call                      // CALL
+	Const                     // CONST
+	Do                        // DO
+	End                       // END
+	If                        // IF
+	Odd                       // ODD
+	Procedure                 // PROCEDURE
+	Then                      // THEN
+	Var                       // VAR
+	While                     // WHILE
+	Error                     // Special type for EOF and UnexpectedChar
 )
 
-var EOF = Token{Err: io.EOF}
-var UnexpectedChar = Token{Err: errors.New("Unexpected character")}
+// EOF is a pointer to a Token with the Err field set to io.EOF. It is used to represent the end of
+// a token stream.
+var EOF = &Token{Tag: Error, Err: io.EOF}
 
-// Token type; contains all the information necessary to represent lexical
-// elements.
+// UnexpectedChar is a pointer to a Token with the Err field set to "Unexpected character". It is
+// used to represent a input character that does not fit into any of the tags defined by the
+// package.
+var UnexpectedChar = &Token{Tag: Error, Err: errors.New("Unexpected character")}
+
+// Token implements a lexical token. It contains all the information needed by the compiler to
+// represent a lexical unit.
 type Token struct {
-	Tag int    // Tag.
+	Tag int    // Tag. One of the constants defined in this package.
 	Val int    // Value.
 	Ln  int    // Line number.
 	Lex string // Lexeme.
 	Err error  // Error.
+}
+
+// New returns a new Token with the line number field set to the argument.
+func New(ln int) *Token {
+	return &Token{Ln: ln}
 }

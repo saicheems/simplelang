@@ -30,7 +30,7 @@ func New(l *lexer.Lexer) *Parser {
 func (p *Parser) Parse() *Node {
 	block := p.parseBlock()
 	// Expect a period.
-	p.expect(token.TagPeriod)
+	p.expect(token.Period)
 	if len(p.err) > 0 {
 		fmt.Println(p.err[0])
 		return nil
@@ -49,56 +49,56 @@ func (p *Parser) parseBlock() *Node {
 // Parses consts and returns an AST node. Returns nil if there are no consts.
 func (p *Parser) parseConst() *Node {
 	cons := newConstNode()
-	if !p.accept(token.TagConst) {
+	if !p.accept(token.Const) {
 		return cons
 	}
 	for {
 		iden := p.getTerminalNodeFromLookahead()
-		p.expect(token.TagIdentifier)
-		p.expect(token.TagEquals)
+		p.expect(token.Identifier)
+		p.expect(token.Equals)
 		inte := p.getTerminalNodeFromLookahead()
-		p.expect(token.TagInteger)
+		p.expect(token.Integer)
 		cons.appendNode(newAssignmentNode(iden, inte))
-		if !p.accept(token.TagComma) {
+		if !p.accept(token.Comma) {
 			break
 		}
 	}
-	p.expect(token.TagSemicolon)
+	p.expect(token.Semicolon)
 	return cons
 }
 
 // Parses vars and returns an AST node. Returns nil if there are no vars.
 func (p *Parser) parseVar() *Node {
 	vars := newVarNode()
-	if !p.accept(token.TagVar) {
+	if !p.accept(token.Var) {
 		return vars
 	}
 	for {
 		iden := p.getTerminalNodeFromLookahead()
-		p.expect(token.TagIdentifier)
+		p.expect(token.Identifier)
 		vars.appendNode(iden)
-		if !p.accept(token.TagComma) {
+		if !p.accept(token.Comma) {
 			break
 		}
 	}
-	p.expect(token.TagSemicolon)
+	p.expect(token.Semicolon)
 	return vars
 }
 
 // Parses procedures and returns an AST node. Returns nil if there are no procedures.
 func (p *Parser) parseProcedure() *Node {
 	proc := newProcedureParentNode()
-	if !p.accept(token.TagProcedure) {
+	if !p.accept(token.Procedure) {
 		return proc
 	}
 	for {
 		iden := p.getTerminalNodeFromLookahead()
-		p.expect(token.TagIdentifier)
-		p.expect(token.TagSemicolon)
+		p.expect(token.Identifier)
+		p.expect(token.Semicolon)
 		bloc := p.parseBlock()
-		p.expect(token.TagSemicolon)
+		p.expect(token.Semicolon)
 		proc.appendNode(newProcedureNode(iden, bloc))
-		if !p.accept(token.TagProcedure) {
+		if !p.accept(token.Procedure) {
 			break
 		}
 	}
@@ -107,38 +107,38 @@ func (p *Parser) parseProcedure() *Node {
 
 func (p *Parser) parseStatement() *Node {
 	iden := p.getTerminalNodeFromLookahead()
-	if p.accept(token.TagIdentifier) {
-		p.expect(token.TagAssignment)
+	if p.accept(token.Identifier) {
+		p.expect(token.Assignment)
 		expr := p.parseExpression()
 		return newAssignmentNode(iden, expr)
-	} else if p.accept(token.TagCall) {
+	} else if p.accept(token.Call) {
 		iden := p.getTerminalNodeFromLookahead()
-		p.expect(token.TagIdentifier)
+		p.expect(token.Identifier)
 		return newCallNode(iden)
-	} else if p.accept(token.TagBegin) {
+	} else if p.accept(token.Begin) {
 		begin := newBeginNode()
 		stmt := p.parseStatement()
 		begin.appendNode(stmt)
-		p.expect(token.TagSemicolon)
+		p.expect(token.Semicolon)
 		for {
-			if !p.compareLookahead(token.TagIdentifier, token.TagCall, token.TagBegin,
-				token.TagIf, token.TagWhile) {
+			if !p.compareLookahead(token.Identifier, token.Call, token.Begin,
+				token.If, token.While) {
 				break
 			}
 			stmt := p.parseStatement()
 			begin.appendNode(stmt)
-			p.expect(token.TagSemicolon)
+			p.expect(token.Semicolon)
 		}
-		p.expect(token.TagEnd)
+		p.expect(token.End)
 		return begin
-	} else if p.accept(token.TagIf) {
+	} else if p.accept(token.If) {
 		cond := p.parseCondition()
-		p.expect(token.TagThen)
+		p.expect(token.Then)
 		stmt := p.parseStatement()
 		return newIfThenNode(cond, stmt)
-	} else if p.accept(token.TagWhile) {
+	} else if p.accept(token.While) {
 		cond := p.parseCondition()
-		p.expect(token.TagDo)
+		p.expect(token.Do)
 		stmt := p.parseStatement()
 		return newWhileDoNode(cond, stmt)
 	} else {
@@ -148,24 +148,24 @@ func (p *Parser) parseStatement() *Node {
 }
 
 func (p *Parser) parseCondition() *Node {
-	if p.accept(token.TagOdd) {
+	if p.accept(token.Odd) {
 		expr := p.parseExpression()
 		return newOddNode(expr)
 	} else {
 		left := p.parseExpression()
-		equalOp := token.TagGreaterThanEqualTo
-		if p.accept(token.TagEquals) {
-			equalOp = token.TagEquals
-		} else if p.accept(token.TagNotEquals) {
-			equalOp = token.TagNotEquals
-		} else if p.accept(token.TagLessThan) {
-			equalOp = token.TagLessThan
-		} else if p.accept(token.TagGreaterThan) {
-			equalOp = token.TagGreaterThan
-		} else if p.accept(token.TagLessThanEqualTo) {
-			equalOp = token.TagLessThanEqualTo
-		} else if p.expect(token.TagGreaterThanEqualTo) {
-			equalOp = token.TagGreaterThanEqualTo
+		equalOp := token.GreaterThanEqualTo
+		if p.accept(token.Equals) {
+			equalOp = token.Equals
+		} else if p.accept(token.NotEquals) {
+			equalOp = token.NotEquals
+		} else if p.accept(token.LessThan) {
+			equalOp = token.LessThan
+		} else if p.accept(token.GreaterThan) {
+			equalOp = token.GreaterThan
+		} else if p.accept(token.LessThanEqualTo) {
+			equalOp = token.LessThanEqualTo
+		} else if p.expect(token.GreaterThanEqualTo) {
+			equalOp = token.GreaterThanEqualTo
 		}
 		right := p.parseExpression()
 		return newCondNode(equalOp, left, right)
@@ -173,17 +173,17 @@ func (p *Parser) parseCondition() *Node {
 }
 
 func (p *Parser) parseExpression() *Node {
-	op := int(token.TagPlus)
-	p.accept(token.TagPlus)
-	if p.accept(token.TagMinus) {
-		op = token.TagMinus
+	op := int(token.Plus)
+	p.accept(token.Plus)
+	if p.accept(token.Minus) {
+		op = token.Minus
 	}
-	term := newMathNode(op, newTerminalNode(&token.Token{Tag: token.TagInteger, Val: 0}), p.parseTerm())
+	term := newMathNode(op, newTerminalNode(&token.Token{Tag: token.Integer, Val: 0}), p.parseTerm())
 	for {
-		if p.accept(token.TagPlus) {
-			op = token.TagPlus
-		} else if p.accept(token.TagMinus) {
-			op = token.TagPlus
+		if p.accept(token.Plus) {
+			op = token.Plus
+		} else if p.accept(token.Minus) {
+			op = token.Plus
 		} else {
 			break
 		}
@@ -194,13 +194,13 @@ func (p *Parser) parseExpression() *Node {
 }
 
 func (p *Parser) parseTerm() *Node {
-	op := int(token.TagTimes)
-	fact := newMathNode(op, newTerminalNode(&token.Token{Tag: token.TagInteger, Val: 1}), p.parseFactor())
+	op := int(token.Times)
+	fact := newMathNode(op, newTerminalNode(&token.Token{Tag: token.Integer, Val: 1}), p.parseFactor())
 	for {
-		if p.accept(token.TagTimes) {
-			op = token.TagTimes
-		} else if p.accept(token.TagDivide) {
-			op = token.TagDivide
+		if p.accept(token.Times) {
+			op = token.Times
+		} else if p.accept(token.Divide) {
+			op = token.Divide
 		} else {
 			break
 		}
@@ -212,12 +212,12 @@ func (p *Parser) parseTerm() *Node {
 
 func (p *Parser) parseFactor() *Node {
 	iden := p.getTerminalNodeFromLookahead()
-	if p.accept(token.TagIdentifier) || p.accept(token.TagInteger) {
+	if p.accept(token.Identifier) || p.accept(token.Integer) {
 		return iden
 	} else {
-		p.expect(token.TagLeftParen)
+		p.expect(token.LeftParen)
 		expr := p.parseExpression()
-		p.expect(token.TagRightParen)
+		p.expect(token.RightParen)
 		return expr
 	}
 }
@@ -226,7 +226,7 @@ func (p *Parser) parseFactor() *Node {
 // or identifier.
 func (p *Parser) getTerminalNodeFromLookahead() *Node {
 	// Only return a node if the lookahead token is an actual terminal.
-	if p.look.Tag == token.TagIdentifier || p.look.Tag == token.TagInteger {
+	if p.look.Tag == token.Identifier || p.look.Tag == token.Integer {
 		return newTerminalNode(p.look)
 	}
 	return nil
