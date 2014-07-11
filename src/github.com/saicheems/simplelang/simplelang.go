@@ -1,5 +1,5 @@
-// Package main links all stages of the compilation together given an input
-// file to compileand produces the output language file.
+// Package main links all stages of the compilation together given an input file to compiled and
+// produces the output language file.
 package main
 
 import (

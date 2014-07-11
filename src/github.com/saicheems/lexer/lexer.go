@@ -10,6 +10,7 @@ import (
 	"github.com/saicheems/token"
 )
 
+// Lexer implements the lexical scanning phase of the compilation.
 type Lexer struct {
 	rd   *bufio.Reader
 	res  map[string]int // Map of reserved keywords.
@@ -17,6 +18,8 @@ type Lexer struct {
 	ln   int            // Current line number in input stream.
 }
 
+// New returns a new Lexer given a File. The file is opened and a bufio.Reader is created to read
+// input characters.
 func New(f *os.File) *Lexer {
 	l := new(Lexer)
 	l.rd = bufio.NewReader(f)
@@ -25,7 +28,7 @@ func New(f *os.File) *Lexer {
 	return l
 }
 
-// Used to create a new lexer for testing.
+// NewFromString returns a new Lexer given a string.
 func NewFromString(s string) *Lexer {
 	l := new(Lexer)
 	l.rd = bufio.NewReader(strings.NewReader(s))
@@ -34,9 +37,9 @@ func NewFromString(s string) *Lexer {
 	return l
 }
 
-// Scan returns the next valid token from the input stream. If a lexing error
-// occurs, it returns a Token of type Error. If the input stream is completed
-// then an io.EOF error is returned. Otherwise error is nil.
+// Scan returns the next valid token from the input stream. If a lexing error occurs, it returns an
+// Token with the tag Error. If the input stream is completed then token.EOF is returned. Otherwise
+// token.UnexpectedChar is returned..
 func (l *Lexer) Scan() *token.Token {
 	if l.readCharAndWhitespace() != nil {
 		return token.EOF
@@ -160,6 +163,9 @@ func (l *Lexer) Scan() *token.Token {
 	return token.UnexpectedChar
 }
 
+// scanComments checks for block comments or line comments and eats input until they are terminated.
+// It returns an io.EOF error if EOF is encountered. Otherwise it returns nil. Otherwise it returns
+// nil. Otherwise it returns nil. Otherwise it returns nil.
 func (l *Lexer) scanComments() error {
 	if l.peek == '/' {
 		match, err := l.readCharAndMatch('*')
@@ -217,7 +223,7 @@ func (l *Lexer) scanComments() error {
 	return nil
 }
 
-// Loads reserved keywords into the symbol table. Should be called on init.
+// loadKeywords loads reserved keywords into the reserved keyword table. Should be called on init.
 func (l *Lexer) loadKeywords() {
 	l.res["CONST"] = token.Const
 	l.res["VAR"] = token.Var
@@ -232,6 +238,8 @@ func (l *Lexer) loadKeywords() {
 	l.res["ODD"] = token.Odd
 }
 
+// readChar reads a single character from the input stream and sets peek. It returns the error
+// io.EOF if EOF is encountered. Otherwise it returns nil.
 func (l *Lexer) readChar() error {
 	c, err := l.rd.ReadByte()
 	if err != nil {
@@ -241,6 +249,9 @@ func (l *Lexer) readChar() error {
 	return nil
 }
 
+// readChar disregards all whitespace before the first non-whitespace character in the input stream.
+// It stops at the first non-whitespace character and and sets peek. It returns the error io.EOF if
+// EOF is encountered. Otherwise it returns nil.
 func (l *Lexer) readCharAndWhitespace() error {
 	// If we see whitespace, let's go ahead and eat it here.
 	// TODO: Make sure this doesn't cause any problems.
@@ -262,10 +273,9 @@ func (l *Lexer) readCharAndWhitespace() error {
 	return nil
 }
 
-// Calls readChar and matches the input character to the peek character. If
-// they match, the function returns true. Otherwise it returns false. The
-// function returns false if there's an error along with the error.
-// The only error possible should be io.EOF.
+// readCharAndMatch calls readChar and matches the input character to the peek character. If they
+// match, the function returns true. Otherwise it returns false. The function returns false if
+// there's an error. The error returned will be either io.EOF or nil.
 func (l *Lexer) readCharAndMatch(c byte) (bool, error) {
 	err := l.readChar()
 	if err != nil {
@@ -278,20 +288,28 @@ func (l *Lexer) readCharAndMatch(c byte) (bool, error) {
 	return true, nil
 }
 
+// unreadChar unreads the last character read from the input stream. It does not modify peek.
 func (l *Lexer) unreadChar() error {
 	// Error should never be encountered.
 	return l.rd.UnreadByte()
 }
 
+// isAlpha returns true if the input byte is an ASCII alphabetic character (a-z, A-Z). Otherwise it
+// returns false.
 func isAlpha(c byte) bool {
 	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
 }
 
+// isDigit returns true if the input byte is an ASCII digit (0-9). Otherwise it returns false.
 func isDigit(c byte) bool {
 	return c >= '0' && c <= '9'
 }
 
+// convertDigitToInt returns the integer version of the input byte if the input byte is a digit
+// (0-9). Otherwise it returns -1.
 func convertCharDigitToInt(c byte) int {
-	// TODO: Do any checks here?
-	return int(c - '0')
+	if isDigit(c) {
+		return int(c - '0')
+	}
+	return -1
 }

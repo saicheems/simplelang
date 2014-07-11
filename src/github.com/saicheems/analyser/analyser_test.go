@@ -13,12 +13,12 @@ type testPair struct {
 }
 
 var tests = []testPair{
-	/*	{"BEGIN x:=3; END.", false},
-		{"VAR x;BEGIN x:=3;END.", true},
-		{"PROCEDURE hello;BEGIN x:= 3;END;BEGIN x := 3;END.", false},
-		{"VAR x;PROCEDURE hello;BEGIN x:= 3;END;BEGIN x:=3;END.", true},
-		{"CONST x:=3;PROCEDURE hello;BEGIN x:= 3;END;BEGIN x:=3;END.", false},
-		{"VAR x;PROCEDURE hello;BEGIN x:= 3;END;BEGIN hello:=3;END.", false},*/
+	{"BEGIN x:=3; END.", false},
+	{"VAR x;BEGIN x:=3;END.", true},
+	{"PROCEDURE hello;BEGIN x:= 3;END;BEGIN x := 3;END.", false},
+	{"VAR x;PROCEDURE hello;BEGIN x:= 3;END;BEGIN x:=3;END.", true},
+	{"CONST x:=3;PROCEDURE hello;BEGIN x:= 3;END;BEGIN x:=3;END.", false},
+	{"VAR x;PROCEDURE hello;BEGIN x:= 3;END;BEGIN hello:=3;END.", false},
 	{"CONST x=3,y=4;\n" +
 		"VAR a,b,c;\n" +
 		"PROCEDURE sum;\n" +
