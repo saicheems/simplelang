@@ -54,7 +54,7 @@ func NewProgramNode(block *Node) *Node {
 	return node
 }
 
-// NewBlockNode returns a new block Node given const, var, procedure and statement nodes.
+// NewBlockNode returns a new block Node given const, var, procedure and statement Nodes.
 func NewBlockNode(cons *Node, vars *Node, proc *Node, stmt *Node) *Node {
 	node := NewNode(Block)
 	node.AppendNode(cons, vars, proc, stmt)
@@ -67,7 +67,7 @@ func NewConstNode() *Node {
 	return node
 }
 
-// NewVarNode returns a new var node.
+// NewVarNode returns a new var Node.
 func NewVarNode() *Node {
 	node := NewNode(Var)
 	return node
@@ -94,7 +94,7 @@ func NewCallNode(iden *Node) *Node {
 	return node
 }
 
-// NewBeginNode returns a new begin node.
+// NewBeginNode returns a new begin Node.
 func NewBeginNode() *Node {
 	node := NewNode(Begin)
 	return node
@@ -107,7 +107,7 @@ func NewIfThenNode(cond *Node, stmt *Node) *Node {
 	return node
 }
 
-// NewWhileDoNode returns a new while do node given a condition Node and a statement Node.
+// NewWhileDoNode returns a new while do Node given a condition Node and a statement Node.
 func NewWhileDoNode(cond *Node, stmt *Node) *Node {
 	node := NewNode(WhileDo)
 	node.AppendNode(cond, stmt)
@@ -121,7 +121,7 @@ func NewOddNode(expr *Node) *Node {
 	return node
 }
 
-// NewMathNode returns a new math node given an operation, a left hand expression Node and a right
+// NewMathNode returns a new math Node given an operation, a left hand expression Node and a right
 // hand expression Node.
 func NewMathNode(op int, left *Node, right *Node) *Node {
 	node := NewNode(Math)
@@ -130,7 +130,7 @@ func NewMathNode(op int, left *Node, right *Node) *Node {
 	return node
 }
 
-// NewCondNode returns a new condition node given an operation, a left hand epression Node and a
+// NewCondNode returns a new condition Node given an operation, a left hand epression Node and a
 // right hand expression Node.
 func NewCondNode(op int, left *Node, right *Node) *Node {
 	node := NewNode(Cond)
@@ -139,7 +139,7 @@ func NewCondNode(op int, left *Node, right *Node) *Node {
 	return node
 }
 
-// NewAssignmentNode returns a new assignment node given a left hand terminal Node and a right hand
+// NewAssignmentNode returns a new assignment Node given a left hand terminal Node and a right hand
 // expression Node.
 func NewAssignmentNode(left *Node, right *Node) *Node {
 	node := NewNode(Assignment)
@@ -147,7 +147,7 @@ func NewAssignmentNode(left *Node, right *Node) *Node {
 	return node
 }
 
-// NewTerminalNode returns a new terminal node given a terminal Token (Identifier or Integer).
+// NewTerminalNode returns a new terminal Node given a terminal Token (Identifier or Integer).
 func NewTerminalNode(tok *token.Token) *Node {
 	node := NewNode(Terminal)
 	node.Tok = tok
