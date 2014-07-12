@@ -17,6 +17,10 @@ var tests = []testPair{
 	{"VAR x;BEGIN x:=3;END.", true},
 	{"PROCEDURE hello;BEGIN x:= 3;END;BEGIN x := 3;END.", false},
 	{"VAR x;PROCEDURE hello;BEGIN x:= 3;END;BEGIN x:=3;END.", true},
+	{"VAR x;PROCEDURE hello;BEGIN x:= 3;END;PROCEDURE hey;CALL hello;BEGIN x:=3;END.", true},
+	{"VAR x;PROCEDURE hello;BEGIN x:= 3;END;PROCEDURE hello;CALL hella;BEGIN x:=3;END.", false},
+	{"VAR x;PROCEDURE hello;BEGIN x:= 3;END;BEGIN x:=3;CALL hella;END.", false},
+	{"VAR x;PROCEDURE hello;BEGIN x:= 3;END;BEGIN x:=3;CALL hello;END.", true},
 	{"CONST x:=3;PROCEDURE hello;BEGIN x:= 3;END;BEGIN x:=3;END.", false},
 	{"VAR x;PROCEDURE hello;BEGIN x:= 3;END;BEGIN hello:=3;END.", false},
 	{"CONST x=3,y=4;\n" +

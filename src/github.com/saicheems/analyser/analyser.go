@@ -85,6 +85,10 @@ func (a *Analyser) recurseVarCheck(node *ast.Node, syms []*symtable.SymbolTable)
 
 func (a *Analyser) recurseProcedureCheck(node *ast.Node, syms []*symtable.SymbolTable) {
 	for _, node := range node.Children {
+		id := node.Children[0]
+		if !a.findSymbolInTables(id.Tok.Lex, symtable.Procedure, syms) {
+			a.appendError(id.Tok)
+		}
 		bloc := node.Children[1]
 		a.recurseBlockCheck(bloc, syms)
 	}
@@ -99,20 +103,21 @@ func (a *Analyser) recurseBlockCheck(node *ast.Node, syms []*symtable.SymbolTabl
 }
 
 func (a *Analyser) recurseStatementCheck(node *ast.Node, syms []*symtable.SymbolTable) {
-	for _, node := range node.Children {
-		if node.Tag == ast.Assignment {
-			a.assignmentCheck(node, syms)
-		} else if node.Tag == ast.Call {
-			a.callCheck(node, syms)
-		} else if node.Tag == ast.Begin {
+	if node.Tag == ast.Assignment {
+		a.assignmentCheck(node, syms)
+	} else if node.Tag == ast.Call {
+		a.callCheck(node, syms)
+	} else if node.Tag == ast.Begin {
+		for _, node := range node.Children {
 			a.recurseStatementCheck(node, syms)
-		} else if node.Tag == ast.IfThen {
-			a.ifThenCheck(node, syms)
-		} else if node.Tag == ast.WhileDo {
-			a.whileDoCheck(node, syms)
-		} else {
-			// This shouldn't happen ever...
 		}
+	} else if node.Tag == ast.IfThen {
+		a.ifThenCheck(node, syms)
+	} else if node.Tag == ast.WhileDo {
+		a.whileDoCheck(node, syms)
+	} else {
+		// This shouldn't happen ever...
+		a.appendError(node.Tok)
 	}
 }
 
@@ -127,10 +132,9 @@ func (a *Analyser) assignmentCheck(node *ast.Node, syms []*symtable.SymbolTable)
 
 func (a *Analyser) callCheck(node *ast.Node, syms []*symtable.SymbolTable) {
 	iden := node.Children[0]
-	if !a.findSymbolInTables(iden.Tok.Lex, symtable.Integer, syms) {
+	if !a.findSymbolInTables(iden.Tok.Lex, symtable.Procedure, syms) {
 		a.appendError(iden.Tok)
 	}
-	a.appendError(iden.Tok)
 }
 
 func (a *Analyser) ifThenCheck(node *ast.Node, syms []*symtable.SymbolTable) {

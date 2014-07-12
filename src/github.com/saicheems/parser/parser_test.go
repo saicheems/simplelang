@@ -13,6 +13,7 @@ type testPair struct {
 
 var tests = []testPair{
 	{"BEGIN x := 3; END.", true},
+	{"BEGIN CALL x; END.", true},
 	{"BEGIN x := 3; END", false},
 	{"BEGIN ; END.", false},
 	{"\n\n\n\nBEGIN ; END.", false},
