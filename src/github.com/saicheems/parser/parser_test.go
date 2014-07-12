@@ -28,6 +28,39 @@ var tests = []testPair{
 	{"VAR x, squ; BEGIN x := 3; END.", true},
 	{"VAR x, squ; PROCEDURE square; BEGIN x := 3; END; BEGIN x := 3; END.", true},
 	{"VAR x, squ; PROCEDURE square; BEGIN x := -3+8; END; BEGIN x := 3; END.", true},
+	{"CONST a = 1, b = 2; VAR x, y, z; PROCEDURE proc; CONST a = 3, b = 4; VAR x, y, z;" +
+		"CALL proc; CALL proc.",
+		true},
+	{"VAR x, y;" +
+		"BEGIN\n" +
+		"\tIF x + 3 = y - 5 THEN\n" +
+		"\tx := 3;\n" +
+		"\nEND.", true},
+	{"VAR x, y;" +
+		"BEGIN\n" +
+		"\tIF x + 3 # y - 5 THEN\n" +
+		"\tx := 3;\n" +
+		"\nEND.", true},
+	{"VAR x, y;" +
+		"BEGIN\n" +
+		"\tIF x + 3 > y - 5 THEN\n" +
+		"\tx := 3;\n" +
+		"\nEND.", true},
+	{"VAR x, y;" +
+		"BEGIN\n" +
+		"\tIF x + 3 < y - 5 THEN\n" +
+		"\tx := 3;\n" +
+		"\nEND.", true},
+	{"VAR x, y;" +
+		"BEGIN\n" +
+		"\tIF x + 3 >= y - 5 THEN\n" +
+		"\tx := 3;\n" +
+		"\nEND.", true},
+	{"VAR x, y;" +
+		"BEGIN\n" +
+		"\tIF x + 3 <= y - 5 THEN\n" +
+		"\tx := 3;\n" +
+		"\nEND.", true},
 	{"VAR x, squ;\n" +
 		"PROCEDURE square;\n" +
 		"BEGIN\n" +
