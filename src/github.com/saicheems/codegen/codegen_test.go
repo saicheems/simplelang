@@ -13,9 +13,7 @@ type testPair struct {
 	expect string
 }
 
-var tests = []testPair{
-	{"VAR x;BEGIN x:=3;END.", "main:\n"},
-}
+var tests = []testPair{}
 
 func TestAnalyse(t *testing.T) {
 	for _, pair := range tests {
