@@ -40,7 +40,7 @@ func TestAnalyse(t *testing.T) {
 		l := lexer.NewFromString(pair.test)
 		p := parser.New(l)
 		a := New(p)
-		pass := a.Analyse()
+		pass := a.Analyse() != nil
 
 		if pass != pair.expect {
 			t.Error(

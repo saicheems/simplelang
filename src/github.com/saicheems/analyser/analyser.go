@@ -10,11 +10,13 @@ import (
 	"github.com/saicheems/token"
 )
 
+// Analyser implements the semantic analysis stage of the compilation.
 type Analyser struct {
 	par *parser.Parser
 	err []error
 }
 
+// New returns a new Analyser.
 func New(par *parser.Parser) *Analyser {
 	a := new(Analyser)
 	a.par = par
@@ -22,10 +24,12 @@ func New(par *parser.Parser) *Analyser {
 	return a
 }
 
-func (a *Analyser) Analyse() bool {
+// Analyse returns the abstract syntax tree if the semantic analysis is successful. Otherwise it
+// returns nil.
+func (a *Analyser) Analyse() *ast.Node {
 	ast := a.par.Parse()
 	if ast == nil {
-		return false
+		return nil
 	}
 	a.loadSymbolTables(ast.Children[0])
 	a.recurseProgramCheck(ast)
@@ -33,13 +37,13 @@ func (a *Analyser) Analyse() bool {
 		for _, err := range a.err {
 			fmt.Println(err)
 		}
-		return false
+		return nil
 	}
-	return true
+	return ast
 }
 
-// Loads all of the symbol tables. In this simple language all symbols should be defined in the
-// header of the program, so it is an easy pass.
+// loadSymbolTables Loads all of the symbol tables. In this simple language all symbols should be
+// defined in the header of the program, so it is an easy pass.
 func (a *Analyser) loadSymbolTables(node *ast.Node) {
 	sym := symtable.New()
 	cons := node.Children[0] // Constants
@@ -64,15 +68,18 @@ func (a *Analyser) loadSymbolTables(node *ast.Node) {
 	node.Sym = sym
 }
 
+// recurseProgramCheck recurses on the top node in the AST (the program node).
 func (a *Analyser) recurseProgramCheck(node *ast.Node) {
 	a.recurseBlockCheck(node.Children[0], make([]*symtable.SymbolTable, 0))
 }
 
+// recurseConstCheck recurses on the const node.
 func (a *Analyser) recurseConstCheck(node *ast.Node, syms []*symtable.SymbolTable) {
 	// Don't really care about the naming of constants... They come before the vars names
 	// anyway.
 }
 
+// recurseVarCheck recurses on the var node.
 func (a *Analyser) recurseVarCheck(node *ast.Node, syms []*symtable.SymbolTable) {
 	// If the immediate parent symbol table has constants of the same name, then there's an
 	// ambiguity issue.
@@ -83,6 +90,7 @@ func (a *Analyser) recurseVarCheck(node *ast.Node, syms []*symtable.SymbolTable)
 	}
 }
 
+// recurseProcedureCheck recurses on the procedure node.
 func (a *Analyser) recurseProcedureCheck(node *ast.Node, syms []*symtable.SymbolTable) {
 	for _, node := range node.Children {
 		id := node.Children[0]
@@ -94,6 +102,7 @@ func (a *Analyser) recurseProcedureCheck(node *ast.Node, syms []*symtable.Symbol
 	}
 }
 
+// recurseBlockCheck recurses on a block.
 func (a *Analyser) recurseBlockCheck(node *ast.Node, syms []*symtable.SymbolTable) {
 	syms = append(syms, node.Sym)
 	a.recurseConstCheck(node.Children[0], syms)
@@ -102,6 +111,7 @@ func (a *Analyser) recurseBlockCheck(node *ast.Node, syms []*symtable.SymbolTabl
 	a.recurseStatementCheck(node.Children[3], syms)
 }
 
+// recurseStatementCheck recurses on a statement.
 func (a *Analyser) recurseStatementCheck(node *ast.Node, syms []*symtable.SymbolTable) {
 	if node.Tag == ast.Assignment {
 		a.assignmentCheck(node, syms)
@@ -121,6 +131,7 @@ func (a *Analyser) recurseStatementCheck(node *ast.Node, syms []*symtable.Symbol
 	}
 }
 
+// assignmentCheck validates an assigment.
 func (a *Analyser) assignmentCheck(node *ast.Node, syms []*symtable.SymbolTable) {
 	iden := node.Children[0]
 	expr := node.Children[1]
@@ -130,6 +141,7 @@ func (a *Analyser) assignmentCheck(node *ast.Node, syms []*symtable.SymbolTable)
 	}
 }
 
+// callCheck validates a call.
 func (a *Analyser) callCheck(node *ast.Node, syms []*symtable.SymbolTable) {
 	iden := node.Children[0]
 	if !a.findSymbolInTables(iden.Tok.Lex, symtable.Procedure, syms) {
@@ -137,16 +149,19 @@ func (a *Analyser) callCheck(node *ast.Node, syms []*symtable.SymbolTable) {
 	}
 }
 
+// ifThenCheck validates an if then statement.
 func (a *Analyser) ifThenCheck(node *ast.Node, syms []*symtable.SymbolTable) {
 	a.recurseExpressionCheck(node.Children[0], syms)
 	a.recurseStatementCheck(node.Children[1], syms)
 }
 
+// whileDoCheck validates a while do statement.
 func (a *Analyser) whileDoCheck(node *ast.Node, syms []*symtable.SymbolTable) {
 	a.recurseExpressionCheck(node.Children[0], syms)
 	a.recurseStatementCheck(node.Children[1], syms)
 }
 
+// recurseExpressionCheck recurses on an expression.
 func (a *Analyser) recurseExpressionCheck(node *ast.Node, syms []*symtable.SymbolTable) {
 	if node.Tag == ast.Terminal {
 		// Only look through the symbol table if it's an idenfitier!
@@ -164,6 +179,7 @@ func (a *Analyser) recurseExpressionCheck(node *ast.Node, syms []*symtable.Symbo
 	a.recurseExpressionCheck(right, syms)
 }
 
+// recurseConditionCheck recurses on a condition.
 func (a *Analyser) recurseConditionCheck(node *ast.Node, syms []*symtable.SymbolTable) {
 	if node.Tag == ast.Cond {
 		a.recurseExpressionCheck(node.Children[0], syms)
@@ -173,6 +189,8 @@ func (a *Analyser) recurseConditionCheck(node *ast.Node, syms []*symtable.Symbol
 	}
 }
 
+// findSymbolInTables returns a bool representing whether or not a symbol was found in the list of
+// symbol tables provided.
 func (a *Analyser) findSymbolInTables(lex string, symbol int, syms []*symtable.SymbolTable) bool {
 	// Go backwards so we search the closest table first. I don't think this matters, but it's
 	// better for clarity.
@@ -184,6 +202,8 @@ func (a *Analyser) findSymbolInTables(lex string, symbol int, syms []*symtable.S
 	return false
 }
 
+// appendError takes in a Token and appends a semantic error at the Token's line number to the
+// Analyser's error list.
 func (a *Analyser) appendError(tok *token.Token) {
 	a.err = append(a.err, fmt.Errorf("Semantic error near line %d.", tok.Ln))
 }

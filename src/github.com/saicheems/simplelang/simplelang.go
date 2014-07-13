@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/saicheems/analyser"
+	"github.com/saicheems/codegen"
 	"github.com/saicheems/lexer"
 	"github.com/saicheems/parser"
 )
@@ -24,5 +25,6 @@ func main() {
 	l := lexer.New(f)
 	p := parser.New(l)
 	a := analyser.New(p)
-	a.Analyse()
+	c := codegen.New(a)
+	c.Generate()
 }
