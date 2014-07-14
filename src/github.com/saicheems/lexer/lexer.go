@@ -217,6 +217,10 @@ func (l *Lexer) scanComments() error {
 						break
 					}
 				}
+			} else {
+				l.unreadChar()
+				// We need to reset the state so division op can be read.
+				l.peek = '/'
 			}
 		}
 	}

@@ -115,6 +115,9 @@ var multiTokenTests = []multiTokenTestPair{
 	{"x:=a+b;", []token.Token{token.Token{Tag: token.Identifier, Lex: "x"}, token.Token{Tag: token.Assignment},
 		token.Token{Tag: token.Identifier, Lex: "a"}, token.Token{Tag: token.Plus},
 		token.Token{Tag: token.Identifier, Lex: "b"}, token.Token{Tag: token.Semicolon}, *token.EOF}},
+	{"x:=a/b;", []token.Token{token.Token{Tag: token.Identifier, Lex: "x"}, token.Token{Tag: token.Assignment},
+		token.Token{Tag: token.Identifier, Lex: "a"}, token.Token{Tag: token.Divide},
+		token.Token{Tag: token.Identifier, Lex: "b"}, token.Token{Tag: token.Semicolon}, *token.EOF}},
 }
 
 func TestScan(t *testing.T) {

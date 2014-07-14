@@ -74,6 +74,10 @@ func (c *CodeGenerator) generateProgram(node *ast.Node) {
 		c.emitSubtractUnsigned("$sp", "$sp", 4)
 	}
 	c.generateStatement(stmt, []*symtable.SymbolTable{bloc.Sym})
+	c.emitAddUnsigned("$sp", "$sp", 4)
+	c.emitLoadWord("$a0", "$sp", 0)
+	c.emitLoadInt("$v0", 1)
+	c.emitSyscall()
 	c.emitLoadInt("$v0", 10)
 	c.emitSyscall()
 }
@@ -173,8 +177,8 @@ func (c *CodeGenerator) generateExpression(node *ast.Node, syms []*symtable.Symb
 			n, s := c.getClosestSymbolTableWithSymbol(symtable.Symbol{symtable.Integer,
 				node.Tok.Lex}, syms)
 			if s == nil {
-				_, s := c.getClosestSymbolTableWithSymbol(symtable.Symbol{symtable.Constant,
-					node.Tok.Lex}, syms)
+				_, s := c.getClosestSymbolTableWithSymbol(
+					symtable.Symbol{symtable.Constant, node.Tok.Lex}, syms)
 				val := s.Get(symtable.Symbol{symtable.Constant, node.Tok.Lex}).Val
 				// It's a constant if we can't find the symbol. TODO: clean.
 				c.emitLoadInt("$a0", val)
@@ -188,7 +192,6 @@ func (c *CodeGenerator) generateExpression(node *ast.Node, syms []*symtable.Symb
 			c.emitLoadWord("$a0", "$a0", 0)
 			c.emitStoreWord("$a0", "$sp", 0)
 			c.emitSubtractUnsigned("$sp", "$sp", 4)
-			// TODO: Doesn't work with constants yet.
 		} else if node.Tok.Tag == token.Integer {
 			c.emitLoadInt("$a0", node.Tok.Val)
 			c.emitStoreWord("$a0", "$sp", 0)
@@ -214,6 +217,17 @@ func (c *CodeGenerator) generateExpression(node *ast.Node, syms []*symtable.Symb
 	} else if node.Op == token.Minus {
 		// TODO: Does this cause any issues?
 		c.emitSubtract("$t1", "$t2", "$t1")
+	} else if node.Op == token.Times {
+		c.emitMult("$t1", "$t2")
+		c.emitMoveFromLo("$t1")
+	} else if node.Op == token.Divide {
+		// TODO: Does this cause any issues?
+		c.emitDiv("$t2", "$t1")
+		c.emitMoveFromLo("$t1")
+	} else {
+		// This can't possibly happen...
+		fmt.Println("A terrible error occurred.",
+			"The abstract syntax tree is wrong and I'm generating code...")
 	}
 	c.emitStoreWord("$t1", "$sp", 0)
 	c.emitSubtractUnsigned("$sp", "$sp", 4)
@@ -276,6 +290,21 @@ func (c *CodeGenerator) emitSubtract(target string, source string, source2 strin
 	c.writeOut(fmt.Sprintf("sub %s %s %s\n", target, source, source2))
 }
 
+// emitMult emits a mult instruction.
+func (c *CodeGenerator) emitMult(source1 string, source2 string) {
+	c.writeOut(fmt.Sprintf("mult %s %s\n", source1, source2))
+}
+
+// emitMult emits a mult instruction.
+func (c *CodeGenerator) emitDiv(source1 string, source2 string) {
+	c.writeOut(fmt.Sprintf("div %s %s\n", source1, source2))
+}
+
+func (c *CodeGenerator) emitMoveFromLo(target string) {
+	c.writeOut(fmt.Sprintf("mflo %s\n", target))
+}
+
+// emitMove emits a move instruction.
 func (c *CodeGenerator) emitMove(target string, source string) {
 	c.writeOut(fmt.Sprintf("move %s %s\n", target, source))
 }
