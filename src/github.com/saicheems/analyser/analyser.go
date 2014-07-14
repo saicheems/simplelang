@@ -52,15 +52,16 @@ func (a *Analyser) loadSymbolTables(node *ast.Node) {
 
 	for _, node := range cons.Children {
 		iden := node.Children[0]
-		sym.Put(symtable.Constant, iden.Tok.Lex)
+		val := node.Children[1].Tok.Val
+		sym.Put(symtable.Symbol{symtable.Constant, iden.Tok.Lex}, &symtable.Value{Val: val})
 	}
 	for _, node := range vars.Children {
-		sym.Put(symtable.Integer, node.Tok.Lex)
+		sym.Put(symtable.Symbol{symtable.Integer, node.Tok.Lex}, symtable.EmptyValue)
 	}
 	for _, node := range proc.Children {
 		iden := node.Children[0]
 		bloc := node.Children[1]
-		sym.Put(symtable.Procedure, iden.Tok.Lex)
+		sym.Put(symtable.Symbol{symtable.Procedure, iden.Tok.Lex}, symtable.EmptyValue)
 		// Recursively load on inner procedures.
 		a.loadSymbolTables(bloc)
 
@@ -195,7 +196,7 @@ func (a *Analyser) findSymbolInTables(lex string, symbol int, syms []*symtable.S
 	// Go backwards so we search the closest table first. I don't think this matters, but it's
 	// better for clarity.
 	for i := len(syms) - 1; i >= 0; i-- {
-		if syms[i].Get(symbol, lex) {
+		if syms[i].Get(symtable.Symbol{symbol, lex}) != nil {
 			return true
 		}
 	}

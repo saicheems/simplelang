@@ -193,7 +193,7 @@ func (p *Parser) parseExpression() *ast.Node {
 		if p.accept(token.Plus) {
 			op = token.Plus
 		} else if p.accept(token.Minus) {
-			op = token.Plus
+			op = token.Minus
 		} else {
 			break
 		}
