@@ -131,7 +131,7 @@ func (p *Parser) parseStatement() *ast.Node {
 			p.expect(token.Semicolon)
 			// If the next token can't begin a statement, stop looking for them.
 			if !p.compareLookahead(token.Identifier, token.Call, token.Begin,
-				token.If, token.While) {
+				token.If, token.While, token.Exclamation) {
 				break
 			}
 		}
@@ -147,6 +147,9 @@ func (p *Parser) parseStatement() *ast.Node {
 		p.expect(token.Do)
 		stmt := p.parseStatement()
 		return ast.NewWhileDoNode(cond, stmt)
+	} else if p.accept(token.Exclamation) {
+		expr := p.parseExpression()
+		return ast.NewPrintNode(expr)
 	} else {
 		// If this function is called we expect to parse a statement.
 		p.appendError()
@@ -231,11 +234,12 @@ func (p *Parser) parseFactor() *ast.Node {
 	iden := p.getTerminalNodeFromLookahead()
 	if p.accept(token.Identifier) || p.accept(token.Integer) {
 		return iden
-	} else {
-		p.expect(token.LeftParen)
+	} else if p.accept(token.LeftParen) {
 		expr := p.parseExpression()
 		p.expect(token.RightParen)
 		return expr
+	} else {
+		return nil
 	}
 }
 

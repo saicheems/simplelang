@@ -74,10 +74,6 @@ func (c *CodeGenerator) generateProgram(node *ast.Node) {
 		c.emitSubtractUnsigned("$sp", "$sp", 4)
 	}
 	c.generateStatement(stmt, []*symtable.SymbolTable{bloc.Sym})
-	c.emitAddUnsigned("$sp", "$sp", 4)
-	c.emitLoadWord("$a0", "$sp", 0)
-	c.emitLoadInt("$v0", 1)
-	c.emitSyscall()
 	c.emitLoadInt("$v0", 10)
 	c.emitSyscall()
 }
@@ -199,6 +195,13 @@ func (c *CodeGenerator) generateStatement(node *ast.Node, syms []*symtable.Symbo
 		c.generateStatement(stmt, syms)
 		c.emitJump(whileLabel)
 		c.emitLabel(doneLabel)
+	} else if node.Tag == ast.Print {
+		expr := node.Children[0]
+		c.generateExpression(expr, syms)
+		c.emitAddUnsigned("$sp", "$sp", 4)
+		c.emitLoadWord("$a0", "$sp", 0)
+		c.emitLoadInt("$v0", 1)
+		c.emitSyscall()
 	} else {
 		// This can't possibly happen...
 		fmt.Println("A terrible error occurred.",

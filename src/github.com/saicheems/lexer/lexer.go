@@ -109,6 +109,9 @@ func (l *Lexer) Scan() *token.Token {
 	} else if l.peek == ')' {
 		tok.Tag = token.RightParen
 		return tok
+	} else if l.peek == '!' {
+		tok.Tag = token.Exclamation
+		return tok
 	} else if l.peek == ':' {
 		// We won't do anything about an error here.
 		m, _ := l.readCharAndMatch('=')

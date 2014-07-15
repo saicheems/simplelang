@@ -126,6 +126,8 @@ func (a *Analyser) recurseStatementCheck(node *ast.Node, syms []*symtable.Symbol
 		a.ifThenCheck(node, syms)
 	} else if node.Tag == ast.WhileDo {
 		a.whileDoCheck(node, syms)
+	} else if node.Tag == ast.Print {
+		a.recurseExpressionCheck(node.Children[0], syms)
 	} else {
 		// This shouldn't happen ever...
 		a.appendError(node.Tok)

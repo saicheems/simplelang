@@ -22,6 +22,7 @@ const (
 	Math                   // Forms mathematical expressions.
 	Assignment             // ex. a := 3;
 	Terminal               // Contains a identifier token or an integer token.
+	Print                  // ex. !X prints X.
 )
 
 // Represents a single node of the abstract syntax tree.
@@ -144,6 +145,13 @@ func NewCondNode(op int, left *Node, right *Node) *Node {
 func NewAssignmentNode(left *Node, right *Node) *Node {
 	node := NewNode(Assignment)
 	node.AppendNode(left, right)
+	return node
+}
+
+// NewPrintNode returns a new print Node given an expression to print.
+func NewPrintNode(expr *Node) *Node {
+	node := NewNode(Print)
+	node.AppendNode(expr)
 	return node
 }
 

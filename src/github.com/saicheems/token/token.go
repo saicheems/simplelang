@@ -24,6 +24,7 @@ const (
 	RightCurlyBrace           // }
 	LeftParen                 // (
 	RightParen                // )
+	Exclamation               // !
 	Assignment                // :=
 	Integer                   // ex. 42
 	Identifier                // ex. abc, abc123, ABC123
