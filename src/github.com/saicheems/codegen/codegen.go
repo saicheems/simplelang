@@ -148,7 +148,6 @@ func (c *CodeGenerator) generateStatement(node *ast.Node, syms []*symtable.Symbo
 			iden.Tok.Lex}, syms)
 		// Indicates which variable on the frame corresponds to the left hand side.
 		o := s.Get(symtable.Symbol{symtable.Integer, iden.Tok.Lex}).Order
-
 		c.loadAddressOfPreviousFrame("$t0", n, o)
 
 		// Rest of stuff.
@@ -201,6 +200,9 @@ func (c *CodeGenerator) generateStatement(node *ast.Node, syms []*symtable.Symbo
 		c.emitAddUnsigned("$sp", "$sp", 4)
 		c.emitLoadWord("$a0", "$sp", 0)
 		c.emitLoadInt("$v0", 1)
+		c.emitSyscall()
+		c.emitLoadInt("$a0", 10)
+		c.emitLoadInt("$v0", 11)
 		c.emitSyscall()
 	} else {
 		// This can't possibly happen...

@@ -55,8 +55,8 @@ func (a *Analyser) loadSymbolTables(node *ast.Node) {
 		val := node.Children[1].Tok.Val
 		sym.Put(symtable.Symbol{symtable.Constant, iden.Tok.Lex}, &symtable.Value{Val: val})
 	}
-	for _, node := range vars.Children {
-		sym.Put(symtable.Symbol{symtable.Integer, node.Tok.Lex}, symtable.EmptyValue)
+	for i, node := range vars.Children {
+		sym.Put(symtable.Symbol{symtable.Integer, node.Tok.Lex}, &symtable.Value{Order: i})
 	}
 	for _, node := range proc.Children {
 		iden := node.Children[0]
