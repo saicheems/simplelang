@@ -153,14 +153,42 @@ func (c *CodeGenerator) generateStatement(node *ast.Node, syms []*symtable.Symbo
 		c.emitStoreWord("$a0", "$t0", 0)
 	} else if node.Tag == ast.Call {
 		id := node.Children[0]
-		label := c.getClosestSymbolTable(syms).Get(symtable.Symbol{symtable.Procedure,
-			id.Tok.Lex}).Label
+		_, s := c.getClosestSymbolTableWithSymbol(
+			symtable.Symbol{symtable.Procedure, id.Tok.Lex}, syms)
+		label := s.Get(symtable.Symbol{symtable.Procedure, id.Tok.Lex}).Label
 		c.emitJumpAndLink(label)
 	} else if node.Tag == ast.Begin {
 		for _, node := range node.Children {
 			c.generateStatement(node, syms)
 		}
 	} else if node.Tag == ast.IfThen {
+		cond := node.Children[0]
+		stmt := node.Children[1]
+
+		ifLabel := c.getNewLabel("if")
+		doneLabel := c.getNewLabel("done")
+
+		if cond.Tag == ast.Cond {
+			c.generateExpression(cond.Children[0], syms)
+		} else {
+			// TODO: Will do.... later.
+			fmt.Println("ODD isn't supported yet.")
+		}
+		c.generateExpression(cond.Children[1], syms)
+		// Load the expressions.
+		c.emitLoadWord("$t1", "$sp", 0)
+		c.emitAddUnsigned("$sp", "$sp", 4)
+		c.emitLoadWord("$t2", "$sp", 0)
+		c.emitAddUnsigned("$sp", "$sp", 4)
+		if cond.Op == token.Equals {
+			c.emitBranchOnEqual("$t1", "$t2", ifLabel)
+		} else if cond.Op == token.NotEquals {
+			c.emitBranchNotEqual("$t1", "$t2", ifLabel)
+		}
+		c.emitJump(doneLabel)
+		c.emitLabel(ifLabel)
+		c.generateStatement(stmt, syms)
+		c.emitLabel(doneLabel)
 	} else if node.Tag == ast.WhileDo {
 	} else {
 		// This can't possibly happen...
@@ -244,6 +272,21 @@ func (c *CodeGenerator) loadAddressOfPreviousFrame(dest string, n int, o int) {
 	c.emitSubtractUnsigned("$t0", "$t0", 4*o)
 }
 
+// emitBranchNotEquals emits a bne instruction.
+func (c *CodeGenerator) emitBranchOnEqual(source1 string, source2 string, label string) {
+	c.writeOut(fmt.Sprintf("beq %s %s %s\n", source1, source2, label))
+}
+
+// emitBranchNotEquals emits a bne instruction.
+func (c *CodeGenerator) emitBranchNotEqual(source1 string, source2 string, label string) {
+	c.writeOut(fmt.Sprintf("bne %s %s %s\n", source1, source2, label))
+}
+
+// emitJumAndLink emits a j instruction to some label.
+func (c *CodeGenerator) emitJump(label string) {
+	c.writeOut(fmt.Sprintf("j %s\n", label))
+}
+
 // emitJumAndLink emits a jal instruction to some label.
 func (c *CodeGenerator) emitJumpAndLink(label string) {
 	c.writeOut(fmt.Sprintf("jal %s\n", label))
@@ -321,6 +364,17 @@ func (c *CodeGenerator) emitNewProcedureLabel() string {
 	c.emitLabel(label)
 	c.count++
 	return label
+}
+
+func (c *CodeGenerator) emitCustomLabel(cus string) string {
+	label := fmt.Sprintf("if%d", c.count)
+	c.emitLabel(label)
+	c.count++
+	return label
+}
+
+func (c *CodeGenerator) getNewLabel(base string) string {
+	return fmt.Sprintf("%s%d", base, c.count)
 }
 
 // emitLabel takes a label name and writes the assembly form.
