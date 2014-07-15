@@ -39,7 +39,7 @@ const (
 	Then                      // THEN
 	Var                       // VAR
 	While                     // WHILE
-	Error                     // Special type for EOF and UnexpectedChar
+	Error                     // Special type for EOF and UnexpectedChar.
 )
 
 // EOF is a pointer to a Token with the Err field set to io.EOF. It is used to represent the end of

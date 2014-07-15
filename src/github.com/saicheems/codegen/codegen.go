@@ -101,7 +101,7 @@ func (c *CodeGenerator) generateProcedure(node *ast.Node, sym []*symtable.Symbol
 		numVars := len(bloc.Children[1].Children)
 		// Emit the procedure label.
 		label := c.emitNewProcedureLabel()
-		c.getClosestSymbolTable(sym).Put(symtable.Symbol{symtable.Procedure, id.Tok.Lex},
+		c.getClosestSymbolTable(sym).Put(symtable.Key{symtable.Procedure, id.Tok.Lex},
 			&symtable.Value{label, 0, 0})
 		// Store the old frame pointer on the stack. DYNAMIC LINK.
 		c.emitStoreWord("$fp", "$sp", 0)
@@ -144,10 +144,10 @@ func (c *CodeGenerator) generateProcedure(node *ast.Node, sym []*symtable.Symbol
 func (c *CodeGenerator) generateStatement(node *ast.Node, syms []*symtable.SymbolTable) {
 	if node.Tag == ast.Assignment {
 		iden := node.Children[0]
-		n, s := c.getClosestSymbolTableWithSymbol(symtable.Symbol{symtable.Integer,
+		n, s := c.getClosestSymbolTableWithSymbol(symtable.Key{symtable.Integer,
 			iden.Tok.Lex}, syms)
 		// Indicates which variable on the frame corresponds to the left hand side.
-		o := s.Get(symtable.Symbol{symtable.Integer, iden.Tok.Lex}).Order
+		o := s.Get(symtable.Key{symtable.Integer, iden.Tok.Lex}).Order
 		c.loadAddressOfPreviousFrame("$t0", n, o)
 
 		// Rest of stuff.
@@ -159,8 +159,8 @@ func (c *CodeGenerator) generateStatement(node *ast.Node, syms []*symtable.Symbo
 	} else if node.Tag == ast.Call {
 		id := node.Children[0]
 		_, s := c.getClosestSymbolTableWithSymbol(
-			symtable.Symbol{symtable.Procedure, id.Tok.Lex}, syms)
-		label := s.Get(symtable.Symbol{symtable.Procedure, id.Tok.Lex}).Label
+			symtable.Key{symtable.Procedure, id.Tok.Lex}, syms)
+		label := s.Get(symtable.Key{symtable.Procedure, id.Tok.Lex}).Label
 		c.emitJumpAndLink(label)
 	} else if node.Tag == ast.Begin {
 		for _, node := range node.Children {
@@ -259,12 +259,12 @@ func (c *CodeGenerator) generateExpression(node *ast.Node, syms []*symtable.Symb
 	if node.Tag == ast.Terminal {
 		// Only look through the symbol table if it's an idenfitier!
 		if node.Tok.Tag == token.Identifier {
-			n, s := c.getClosestSymbolTableWithSymbol(symtable.Symbol{symtable.Integer,
+			n, s := c.getClosestSymbolTableWithSymbol(symtable.Key{symtable.Integer,
 				node.Tok.Lex}, syms)
 			if s == nil {
 				_, s := c.getClosestSymbolTableWithSymbol(
-					symtable.Symbol{symtable.Constant, node.Tok.Lex}, syms)
-				val := s.Get(symtable.Symbol{symtable.Constant, node.Tok.Lex}).Val
+					symtable.Key{symtable.Constant, node.Tok.Lex}, syms)
+				val := s.Get(symtable.Key{symtable.Constant, node.Tok.Lex}).Val
 				// It's a constant if we can't find the symbol. TODO: clean.
 				c.emitLoadInt("$a0", val)
 				c.emitStoreWord("$a0", "$sp", 0)
@@ -272,7 +272,7 @@ func (c *CodeGenerator) generateExpression(node *ast.Node, syms []*symtable.Symb
 				return
 			}
 			// Indicates which variable on the frame corresponds to the left hand side.
-			o := s.Get(symtable.Symbol{symtable.Integer, node.Tok.Lex}).Order
+			o := s.Get(symtable.Key{symtable.Integer, node.Tok.Lex}).Order
 			c.loadAddressOfPreviousFrame("$a0", n, o)
 			c.emitLoadWord("$a0", "$a0", 0)
 			c.emitStoreWord("$a0", "$sp", 0)
@@ -465,7 +465,7 @@ func (c *CodeGenerator) getClosestSymbolTable(s []*symtable.SymbolTable) *symtab
 	return s[len(s)-1]
 }
 
-func (c *CodeGenerator) getClosestSymbolTableWithSymbol(sym symtable.Symbol,
+func (c *CodeGenerator) getClosestSymbolTableWithSymbol(sym symtable.Key,
 	syms []*symtable.SymbolTable) (int, *symtable.SymbolTable) {
 	for i := len(syms) - 1; i >= 0; i-- {
 		if syms[i].Get(sym) != nil {
