@@ -42,6 +42,7 @@ const (
 	Error                     // Special type for EOF and UnexpectedChar.
 )
 
+// TODO: Have initializers for errors? So we can set their line numbers.
 // EOF is a pointer to a Token with the Err field set to io.EOF. It is used to represent the end of
 // a token stream.
 var EOF = &Token{Tag: Error, Err: io.EOF}
@@ -61,7 +62,7 @@ type Token struct {
 	Err error  // Error.
 }
 
-// New returns a new Token with the line number field set to the argument.
+// New returns a new Token with the specified line number set.
 func New(ln int) *Token {
 	return &Token{Ln: ln}
 }
