@@ -152,13 +152,13 @@ func (a *Analyser) callCheck(node *ast.Node, syms []*symtable.SymbolTable) {
 
 // ifThenCheck validates an if then statement.
 func (a *Analyser) ifThenCheck(node *ast.Node, syms []*symtable.SymbolTable) {
-	a.recurseExpressionCheck(node.Children[0], syms)
+	a.recurseConditionCheck(node.Children[0], syms)
 	a.recurseStatementCheck(node.Children[1], syms)
 }
 
 // whileDoCheck validates a while do statement.
 func (a *Analyser) whileDoCheck(node *ast.Node, syms []*symtable.SymbolTable) {
-	a.recurseExpressionCheck(node.Children[0], syms)
+	a.recurseConditionCheck(node.Children[0], syms)
 	a.recurseStatementCheck(node.Children[1], syms)
 }
 

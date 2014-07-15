@@ -183,12 +183,17 @@ func (p *Parser) parseCondition() *ast.Node {
 // parseExpression parses expressions and returns a math Node.
 func (p *Parser) parseExpression() *ast.Node {
 	op := int(token.Plus)
-	p.accept(token.Plus)
+	var term *ast.Node
+
 	if p.accept(token.Minus) {
 		op = token.Minus
+		term = ast.NewMathNode(op,
+			ast.NewTerminalNode(&token.Token{Tag: token.Integer, Val: 0}),
+			p.parseTerm())
+	} else {
+		p.accept(token.Plus)
+		term = p.parseTerm()
 	}
-	term := ast.NewMathNode(op, ast.NewTerminalNode(&token.Token{Tag: token.Integer, Val: 0}),
-		p.parseTerm())
 	for {
 		if p.accept(token.Plus) {
 			op = token.Plus
@@ -206,8 +211,7 @@ func (p *Parser) parseExpression() *ast.Node {
 // parseTerm parses terms and returns a math Node.
 func (p *Parser) parseTerm() *ast.Node {
 	op := int(token.Times)
-	fact := ast.NewMathNode(op, ast.NewTerminalNode(&token.Token{Tag: token.Integer, Val: 1}),
-		p.parseFactor())
+	fact := p.parseFactor()
 	for {
 		if p.accept(token.Times) {
 			op = token.Times
