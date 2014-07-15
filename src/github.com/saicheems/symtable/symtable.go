@@ -10,8 +10,8 @@ const (
 // EmtpyValue is a Value with all fields initialized to nil.
 var EmptyValue *Value = &Value{}
 
-// Key implements a key for the symbol table. Should be initialized with a tag defined by this
-// package and a lexeme.
+// Key implements a key for the symbol table. Should be initialized with a tag (const defined by
+// this package) and a lexeme.
 type Key struct {
 	Tag int    // One of Constant, Integer, or Procedure.
 	Lex string // Lexeme of Token.
@@ -29,20 +29,21 @@ type SymbolTable struct {
 	table map[Key]*Value
 }
 
-// New returns a new SymbolTable whose table has been initialized.
+// New returns a new SymbolTable.
 func New() *SymbolTable {
 	s := new(SymbolTable)
 	s.table = make(map[Key]*Value)
 	return s
 }
 
-// Put adds a symbol to the symbol table. Its arguments are a (key) Symbol and a Value.
-func (st *SymbolTable) Put(s Key, v *Value) {
-	st.table[s] = v
+// Put adds the specified key and value to the symbol table. An entry will be overriden if the key
+// is not unique.
+func (s *SymbolTable) Put(key Key, value *Value) {
+	s.table[key] = value
 }
 
-// Get returns a boolean that represents whether or not a symbol is present in the symbol table. It
-// takes in a symbol tag (one of Constant, Integer, or Procedure) and a lexeme.
-func (st *SymbolTable) Get(s Key) *Value {
-	return st.table[s]
+// Get returns a *Value corresponding to the specified Key or nil if there is no entry corresponding
+// to that key.
+func (s *SymbolTable) Get(key Key) *Value {
+	return s.table[key]
 }
