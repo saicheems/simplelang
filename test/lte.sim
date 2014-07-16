@@ -1,0 +1,8 @@
+VAR X;
+BEGIN
+        X := 0;
+        IF X <= 1 THEN
+                X := X-1;
+        IF X <= -1 THEN
+                X := X-1;
+END.

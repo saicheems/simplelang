@@ -1,0 +1,6 @@
+VAR X;
+BEGIN
+        X := 5;
+        IF X > 4 THEN
+                X := 0-1;
+END.

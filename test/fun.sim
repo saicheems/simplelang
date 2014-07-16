@@ -1,0 +1,8 @@
+// This program prints out the numbers 1 to 10
+VAR X;
+WHILE X < 10 DO
+        BEGIN
+                X := X + 1;
+                IF ODD X THEN
+                        ! X;
+        END.

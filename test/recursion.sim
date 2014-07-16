@@ -1,0 +1,14 @@
+CONST lol = 1, asdf = 3;
+VAR X;
+PROCEDURE hi;
+VAR Y;
+BEGIN
+        IF X # 0 THEN
+                BEGIN
+                        X := X-1;
+                        CALL hi;
+                END;
+END;
+BEGIN
+        CALL hi;
+END.

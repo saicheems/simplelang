@@ -1,0 +1,8 @@
+VAR X;
+BEGIN
+        WHILE X < 9 DO
+                X := X + 1;
+        WHILE ODD X DO
+                X := X + 1;
+        ! X;
+END.

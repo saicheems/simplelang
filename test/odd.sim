@@ -1,0 +1,6 @@
+VAR X;
+BEGIN
+        X := 2;
+        IF ODD X THEN
+                X := 42;
+END.
