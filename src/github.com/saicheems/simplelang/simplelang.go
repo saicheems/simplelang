@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/saicheems/analyser"
@@ -25,6 +26,13 @@ func main() {
 	l := lexer.New(f)
 	p := parser.New(l)
 	a := analyser.New(p)
-	c := codegen.New(a)
+	c := codegen.NewToString(a)
 	c.Generate()
+	code := c.ToString()
+	f, err = os.Create("out.s")
+	if err != nil {
+		fmt.Println("Error creating output file.")
+	}
+	io.WriteString(f, code)
+	f.Close()
 }

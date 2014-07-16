@@ -13,11 +13,11 @@ import (
 // Parser implements the parsing stage of the compilation.
 type Parser struct {
 	lex  *lexer.Lexer
-	peek *token.Token
-	err  []error // Set errors if we have a parse failure.
+	peek *token.Token // Next Token in the Token stream.
+	err  []error      // Set errors if we have a parse failure.
 }
 
-// New returns a new Parser and moves the token stream forward by one token.
+// New returns a new Parser.
 func New(l *lexer.Lexer) *Parser {
 	p := new(Parser)
 	p.lex = l
@@ -27,8 +27,8 @@ func New(l *lexer.Lexer) *Parser {
 	return p
 }
 
-// Parse returns the head node of the abstract syntax tree. If there is an error in the parse, the
-// it will return nil.
+// Parse returns the head node of the abstract syntax tree. If there is an error in the parse it
+// will return nil.
 func (p *Parser) Parse() *ast.Node {
 	block := p.parseBlock()
 	// Expect a period to finish the program.
