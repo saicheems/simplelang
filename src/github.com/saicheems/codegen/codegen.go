@@ -61,7 +61,7 @@ func (c *CodeGenerator) generateProgram(node *ast.Node) {
 	proc := bloc.Children[2]
 	stmt := bloc.Children[3]
 	// We'll lay out the procedures first at the top of the assembly output.
-	c.generateProcedure(proc, []*symtable.SymbolTable{bloc.Sym}, 0)
+	c.generateProcedure(proc, []*symtable.SymbolTable{bloc.Sym})
 	c.emitMainLabel()
 	numVars := len(vars.Children)
 
@@ -78,22 +78,9 @@ func (c *CodeGenerator) generateProgram(node *ast.Node) {
 	c.emitSyscall()
 }
 
-// generateBlock begins generation of a block node.
-func (c *CodeGenerator) generateBlock(node *ast.Node, sym []*symtable.SymbolTable, level int) {
-	// We won't bother with constants here - just insert their values into the assembly
-	// instructions automatically.
-	// c.generateConst(node)
-	// We won't bother with vars here either - they're taken care of in generateProgram for the
-	// statements in main, and in generateProcedure for any vars of procedures.
-	// c.generateVar(node)
-	sym = append(sym, node.Sym)
-	c.generateProcedure(node.Children[2], sym, level)
-	c.generateStatement(node.Children[3], sym)
-}
-
 // generateBlock begins generation of a procedure node. We pass in the number of vars declared
 // before the function so we can add the right number of variables to the stack.
-func (c *CodeGenerator) generateProcedure(node *ast.Node, sym []*symtable.SymbolTable, level int) {
+func (c *CodeGenerator) generateProcedure(node *ast.Node, sym []*symtable.SymbolTable) {
 	for _, node := range node.Children {
 		id := node.Children[0]
 		bloc := node.Children[1]
@@ -101,34 +88,17 @@ func (c *CodeGenerator) generateProcedure(node *ast.Node, sym []*symtable.Symbol
 		numVars := len(bloc.Children[1].Children)
 		// Emit the procedure label.
 		label := c.emitNewProcedureLabel()
-		c.getClosestSymbolTable(sym).Put(symtable.Key{symtable.Procedure, id.Tok.Lex},
-			&symtable.Value{label, 0, 0})
-		// Store the old frame pointer on the stack. DYNAMIC LINK.
-		c.emitStoreWord("$fp", "$sp", 0)
-		c.emitSubtractUnsigned("$sp", "$sp", 4)
-
-		// Calculate the STATIC LINK.
-		c.emitMove("$a0", "$fp") // Points to frame of main if we're at depth 0.
-		for i := 0; i < level; i++ {
-			c.emitLoadWord("$a0", "$a0", 4)
-		}
-		// Store the STATIC LINK on the stack.
-		c.emitStoreWord("$a0", "$sp", 0)
-		c.emitSubtractUnsigned("$sp", "$sp", 4)
-
-		// Have the new frame pointer point to the stack.
-		c.emitMove("$fp", "$sp")
-		// Load all the variables in this scope onto the current frame. Initialize to 0.
-		for i := 0; i < numVars; i++ {
-			c.emitLoadInt("$a0", 0)
-			c.emitStoreWord("$a0", "$sp", 0)
-			c.emitSubtractUnsigned("$sp", "$sp", 4)
-		}
 		// Store the return address on the stack.
 		c.emitStoreWord("$ra", "$sp", 0)
 		c.emitSubtractUnsigned("$sp", "$sp", 4)
+
+		c.getClosestSymbolTable(sym).Put(symtable.Key{symtable.Procedure, id.Tok.Lex},
+			&symtable.Value{label, 0, 0, numVars})
+		c.emitJump(label + "_body")
 		// Generate code for the body.
-		c.generateBlock(bloc, sym, level+1)
+		c.generateProcedure(bloc.Children[2], append(sym, bloc.Sym))
+		c.emitLabel(label + "_body")
+		c.generateStatement(bloc.Children[3], append(sym, bloc.Sym))
 		// Emit the done tag for the function.
 		c.emitLabel(label + "_done")
 		// Load the return address from the stack.
@@ -158,10 +128,36 @@ func (c *CodeGenerator) generateStatement(node *ast.Node, syms []*symtable.Symbo
 		c.emitStoreWord("$a0", "$t0", 0)
 	} else if node.Tag == ast.Call {
 		id := node.Children[0]
-		_, s := c.getClosestSymbolTableWithSymbol(
+		n, s := c.getClosestSymbolTableWithSymbol(
 			symtable.Key{symtable.Procedure, id.Tok.Lex}, syms)
-		label := s.Get(symtable.Key{symtable.Procedure, id.Tok.Lex}).Label
+		value := s.Get(symtable.Key{symtable.Procedure, id.Tok.Lex})
+		label := value.Label
+		numVars := value.NumVars
+
+		// Store the old frame pointer on the stack. DYNAMIC LINK.
+		c.emitStoreWord("$fp", "$sp", 0)
+		c.emitSubtractUnsigned("$sp", "$sp", 4)
+
+		// Calculate the STATIC LINK.
+		c.emitMove("$a0", "$fp") // Points to frame of main if we're at depth 0.
+		for i := 0; i < n; i++ {
+			c.emitLoadWord("$a0", "$a0", 4)
+		}
+		// Store the STATIC LINK on the stack.
+		c.emitStoreWord("$a0", "$sp", 0)
+		c.emitSubtractUnsigned("$sp", "$sp", 4)
+
+		// Have the new frame pointer point to the stack.
+		c.emitMove("$fp", "$sp")
+		// Load all the variables in this scope onto the current frame. Initialize to 0.
+		for i := 0; i < numVars; i++ {
+			c.emitLoadInt("$a0", 0)
+			c.emitStoreWord("$a0", "$sp", 0)
+			c.emitSubtractUnsigned("$sp", "$sp", 4)
+		}
+
 		c.emitJumpAndLink(label)
+
 	} else if node.Tag == ast.Begin {
 		for _, node := range node.Children {
 			c.generateStatement(node, syms)

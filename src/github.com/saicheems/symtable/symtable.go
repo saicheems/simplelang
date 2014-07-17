@@ -19,9 +19,10 @@ type Key struct {
 
 // Value contains information needed by the code generation phase.
 type Value struct {
-	Label string // Assembly label of function for code generation purposes.
-	Order int    // The position in the stack frame of the variable (nth VAR).
-	Val   int    // For constants.
+	Label   string // Assembly label of function for code generation purposes.
+	Order   int    // The position in the stack frame of the variable (nth VAR).
+	Val     int    // For constants.
+	NumVars int    // Number of vars for procedures.
 }
 
 // SymbolTable implements a symbol table as a map with key Key and value *Value.
