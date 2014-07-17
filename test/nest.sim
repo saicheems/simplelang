@@ -1,0 +1,27 @@
+VAR a, b;
+PROCEDURE Q;
+        VAR c, d; // belong to Q
+        PROCEDURE R;
+                BEGIN
+                        ! c;
+                        ! b;
+                        ! d;
+                        ! b + d;
+                        c := b + d;
+                        IF c < a THEN
+                                BEGIN
+                                        b := c;
+                                        CALL Q;
+                                END;
+                END;
+        BEGIN
+                d := 1;
+                CALL R;
+        END;
+BEGIN
+        a := 2;
+        b := 0;
+        CALL Q;
+        ! a;
+        ! b;
+END.
