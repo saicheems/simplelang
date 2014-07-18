@@ -1,0 +1,12 @@
+CONST a = 15, b=42;
+VAR x;
+PROCEDURE test;
+        VAR Y;
+        BEGIN
+                x := x + 1;
+                Y := a + b - x;
+                ! Y;
+                IF x # 5 THEN
+                        CALL test;
+        END;
+CALL test.

@@ -26,9 +26,9 @@ func main() {
 	l := lexer.New(f)
 	p := parser.New(l)
 	a := analyser.New(p)
-	c := codegen.NewToString(a)
+	c := codegen.New(a)
 	c.Generate()
-	code := c.ToString()
+	code := c.String()
 	f, err = os.Create("out.s")
 	if err != nil {
 		fmt.Println("Error creating output file.")

@@ -3,6 +3,8 @@ BEGIN
         X := -1;
         IF X >= -2 THEN
                 X := X-1;
+        ! X;
         IF X >= -2 THEN
                 X := X-1;
+        ! X;
 END.
