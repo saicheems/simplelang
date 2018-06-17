@@ -3,8 +3,8 @@ package analyser
 import (
 	"testing"
 
-	"github.com/saicheems/lexer"
-	"github.com/saicheems/parser"
+	"github.com/saicheems/simplelang/lexer"
+	"github.com/saicheems/simplelang/parser"
 )
 
 type testPair struct {

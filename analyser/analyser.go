@@ -4,10 +4,10 @@ package analyser
 import (
 	"fmt"
 
-	"github.com/saicheems/ast"
-	"github.com/saicheems/parser"
-	"github.com/saicheems/symtable"
-	"github.com/saicheems/token"
+	"github.com/saicheems/simplelang/ast"
+	"github.com/saicheems/simplelang/parser"
+	"github.com/saicheems/simplelang/symtable"
+	"github.com/saicheems/simplelang/token"
 )
 
 // Analyser implements the semantic analysis stage of the compilation.

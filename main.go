@@ -7,10 +7,10 @@ import (
 	"io"
 	"os"
 
-	"github.com/saicheems/analyser"
-	"github.com/saicheems/codegen"
-	"github.com/saicheems/lexer"
-	"github.com/saicheems/parser"
+	"github.com/saicheems/simplelang/analyser"
+	"github.com/saicheems/simplelang/codegen"
+	"github.com/saicheems/simplelang/lexer"
+	"github.com/saicheems/simplelang/parser"
 )
 
 func main() {

@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/saicheems/token"
+	"github.com/saicheems/simplelang/token"
 )
 
 // Lexer implements the lexical scanning phase of the compilation.

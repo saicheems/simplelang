@@ -3,7 +3,7 @@ package parser
 import (
 	"testing"
 
-	"github.com/saicheems/lexer"
+	"github.com/saicheems/simplelang/lexer"
 )
 
 type testPair struct {

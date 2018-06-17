@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/saicheems/token"
+	"github.com/saicheems/simplelang/token"
 )
 
 type singleTokenTestPair struct {

@@ -2,8 +2,8 @@
 package ast
 
 import (
-	"github.com/saicheems/symtable"
-	"github.com/saicheems/token"
+	"github.com/saicheems/simplelang/symtable"
+	"github.com/saicheems/simplelang/token"
 )
 
 const (

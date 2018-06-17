@@ -6,10 +6,10 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/saicheems/analyser"
-	"github.com/saicheems/ast"
-	"github.com/saicheems/symtable"
-	"github.com/saicheems/token"
+	"github.com/saicheems/simplelang/analyser"
+	"github.com/saicheems/simplelang/ast"
+	"github.com/saicheems/simplelang/symtable"
+	"github.com/saicheems/simplelang/token"
 )
 
 // CodeGenerator implements the code generation phase of the compilation.

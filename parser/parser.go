@@ -5,9 +5,9 @@ package parser
 import (
 	"fmt"
 
-	"github.com/saicheems/ast"
-	"github.com/saicheems/lexer"
-	"github.com/saicheems/token"
+	"github.com/saicheems/simplelang/ast"
+	"github.com/saicheems/simplelang/lexer"
+	"github.com/saicheems/simplelang/token"
 )
 
 // Parser implements the parsing stage of the compilation.
